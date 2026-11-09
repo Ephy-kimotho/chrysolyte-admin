@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { DM_Sans, Geist_Mono, Inter } from "next/font/google"
-
 import "./globals.css"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { QueryProvider } from "@/providers/query-provider"
+import { AuthProvider } from "@/providers/auth-provider"
 
 const dmSansHeading = DM_Sans({
   subsets: ["latin"],
@@ -38,7 +39,11 @@ export default function RootLayout({
       )}
     >
       <body>
-        <TooltipProvider>{children}</TooltipProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

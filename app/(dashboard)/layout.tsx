@@ -8,7 +8,9 @@ export default function DashboardLayout({
   children: React.ReactNode
 }>) {
   return (
-    <SidebarProvider>
+    // Pinned open so the desktop sidebar never collapses. Below `md` the
+    // sidebar is a drawer driven by `openMobile`, which this doesn't affect.
+    <SidebarProvider open>
       <AppSidebar />
       <SidebarInset className="min-w-0">
         <SiteHeader />
