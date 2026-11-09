@@ -11,7 +11,7 @@ export const navItems = [
   { title: "Staff & KPI", href: "/staff-kpi" },
   { title: "Board Analysis", href: "/board-analysis" },
   { title: "Announcements", href: "/announcements" },
-  { title: "Settings", href: "/settings" },
+  { title: "Users", href: "/users" }
 ]
 
 export function isNavItemActive(pathname: string, href: string) {
