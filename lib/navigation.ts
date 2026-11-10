@@ -11,8 +11,14 @@ export const navItems = [
   { title: "Staff & KPI", href: "/staff-kpi" },
   { title: "Board Analysis", href: "/board-analysis" },
   { title: "Announcements", href: "/announcements" },
-  { title: "Users", href: "/users" }
+  { title: "Users", href: "/users" },
 ]
+
+/** Account pages inside the dashboard shell that aren't sidebar links. */
+export const accountItems = [{ title: "Profile", href: "/profile" }]
+
+/** Every page in the dashboard shell, used for header titles and route guards. */
+export const dashboardPages = [...navItems, ...accountItems]
 
 export function isNavItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)

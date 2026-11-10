@@ -2,15 +2,16 @@
 
 import { usePathname } from "next/navigation"
 
+import { UserMenu } from "@/components/user-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useCurrentMinute } from "@/hooks/use-current-minute"
 import { formatDateTime } from "@/lib/format"
-import { isNavItemActive, navItems } from "@/lib/navigation"
+import { dashboardPages, isNavItemActive } from "@/lib/navigation"
 
 export function SiteHeader() {
   const pathname = usePathname()
   const now = useCurrentMinute()
-  const title = navItems.find((item) =>
+  const title = dashboardPages.find((item) =>
     isNavItemActive(pathname, item.href)
   )?.title
 
@@ -30,6 +31,7 @@ export function SiteHeader() {
           )}
         </p>
       </div>
+      <UserMenu className="ml-auto" />
     </header>
   )
 }

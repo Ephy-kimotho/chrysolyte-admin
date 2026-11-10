@@ -17,11 +17,13 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useLogout } from "@/hooks/use-logout"
 import { isNavItemActive, navItems } from "@/lib/navigation"
 
 export function AppSidebar() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
+  const logoutMutation = useLogout()
 
   // The mobile drawer stays open across client navigation unless closed here.
   const closeMobileSidebar = () => setOpenMobile(false)
@@ -71,8 +73,17 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        <Button variant="outline" size="lg" className="h-11 w-full font-bold">
-          Sign out
+        <Button
+          variant="outline"
+          size="lg"
+          className="h-11 w-full font-bold"
+          disabled={logoutMutation.isPending}
+          onClick={() => {
+            closeMobileSidebar()
+            logoutMutation.mutate()
+          }}
+        >
+          {logoutMutation.isPending ? "Signing out…" : "Sign out"}
         </Button>
       </SidebarFooter>
     </Sidebar>

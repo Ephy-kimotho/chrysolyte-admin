@@ -7,6 +7,7 @@ import type { NextConfig } from "next"
  * origin directly from the browser would be cross-site and the cookie would
  * never be attached to `/auth/refresh`.
  */
+
 const API_PROXY_TARGET = process.env.API_PROXY_TARGET
 
 const nextConfig: NextConfig = {

@@ -28,7 +28,10 @@ export function PasswordInput({
         onClick={() => setVisible((shown) => !shown)}
         aria-label={visible ? "Hide password" : "Show password"}
         aria-pressed={visible}
-        className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-lg text-muted-foreground hover:text-foreground"
+        // Centered with `inset-y-0 my-auto`, not a translate: the button's
+        // press effect also sets translate-y, which made the icon jump. The
+        // press nudge is turned off so the toggle stays put while clicked.
+        className="absolute inset-y-0 right-1.5 my-auto rounded-lg text-muted-foreground hover:text-foreground active:not-aria-[haspopup]:translate-y-0"
       >
         {visible ? <EyeOffIcon /> : <EyeIcon />}
       </Button>
