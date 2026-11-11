@@ -17,7 +17,7 @@ export function SiteHeader() {
 
   return (
     <header className="flex items-center gap-3 p-4 md:gap-4 md:px-6 md:pt-6 md:pb-4">
-      <SidebarTrigger className="-ml-1 size-9 md:hidden" />
+      <SidebarTrigger className="-ml-1 size-9 md:hidden print:hidden" />
       <div className="flex min-w-0 flex-col gap-1">
         <h1 className="truncate font-heading text-2xl font-bold text-heading md:text-3xl">
           {title}
@@ -31,7 +31,7 @@ export function SiteHeader() {
           )}
         </p>
       </div>
-      <UserMenu className="ml-auto" />
+      <UserMenu className="ml-auto print:hidden" />
     </header>
   )
 }

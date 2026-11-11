@@ -1,10 +1,29 @@
 import { format, parseISO } from "date-fns"
 
 const numberFormatter = new Intl.NumberFormat("en-KE")
+const compactNumberFormatter = new Intl.NumberFormat("en-KE", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+})
 
 /** Formats an amount in Kenyan shillings, e.g. `KES 26,200`. */
 export function formatCurrency(amount: number) {
   return `KES ${numberFormatter.format(amount)}`
+}
+
+/** Formats an amount in Kenyan shillings for tight spaces, e.g. `KES 12.5M`. */
+export function formatCompactCurrency(amount: number) {
+  return `KES ${compactNumberFormatter.format(amount)}`
+}
+
+/** A whole-number percentage of `part` in `total`, or 0 when `total` is 0. */
+export function percentOf(part: number, total: number) {
+  return total === 0 ? 0 : Math.round((part / total) * 100)
+}
+
+/** Picks the singular or plural form for a count, e.g. `pluralize(1, "notice", "notices")`. */
+export function pluralize(count: number, one: string, other: string) {
+  return count === 1 ? one : other
 }
 
 /** Formats an ISO date string, e.g. `2026-12-18` → `18 Dec 2026`. */

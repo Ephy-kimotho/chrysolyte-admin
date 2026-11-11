@@ -11,7 +11,7 @@ export const navItems = [
   { title: "Staff & KPI", href: "/staff-kpi" },
   { title: "Board Analysis", href: "/board-analysis" },
   { title: "Announcements", href: "/announcements" },
-  { title: "Users", href: "/users" },
+  // { title: "Users", href: "/users" },
 ]
 
 /** Account pages inside the dashboard shell that aren't sidebar links. */

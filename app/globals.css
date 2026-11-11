@@ -49,6 +49,36 @@
     --sidebar-ring: #aab281;
 }
 
+/* Printing: the dark theme is unreadable on paper (browsers drop backgrounds
+   by default), so swap in a light palette and hide the app chrome. */
+@media print {
+  :root {
+    color-scheme: light;
+
+    --background: #ffffff;
+    --foreground: #1b1d17;
+    --heading: #1b1d17;
+    --card: #ffffff;
+    --card-foreground: #1b1d17;
+    --primary: #4f5634;
+    --primary-foreground: #ffffff;
+    --secondary: #eceee3;
+    --secondary-foreground: #1b1d17;
+    --muted: #eceee3;
+    --muted-foreground: #5a5d50;
+    --destructive: #9a2f24;
+    --destructive-muted: #f8e1dd;
+    --warning: #7a5a12;
+    --warning-muted: #f8edd2;
+    --border: #d5d8c9;
+    --chart-1: #6b7448;
+  }
+
+  [data-slot="sidebar"] {
+    display: none !important;
+  }
+}
+
 @theme inline {
     --font-sans: var(--font-sans);
     --font-heading: var(--font-heading);

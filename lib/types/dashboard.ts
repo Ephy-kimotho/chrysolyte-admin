@@ -1,4 +1,4 @@
-export type ProjectPhase = "Design" | "Construction"
+import type { ProjectPhase } from "@/lib/types/projects"
 
 export type ProjectStatus = {
   id: string

@@ -82,7 +82,7 @@ export function ChangePasswordDialog({ onChanged }: ChangePasswordDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[calc(100svh-2rem)] gap-6 overflow-y-auto rounded-2xl p-5 sm:max-w-lg sm:p-6">
+      <DialogContent className="gap-6 rounded-2xl p-5 sm:p-6">
         <DialogHeader className="pr-8">
           <DialogTitle className="text-lg font-bold text-heading">
             Change your password
