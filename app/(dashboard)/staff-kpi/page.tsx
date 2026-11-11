@@ -1,3 +1,11 @@
+import type { Metadata } from "next"
+
+import { StaffView } from "@/components/staff/staff-view"
+
+export const metadata: Metadata = {
+  title: "Staff & KPI · Chrysolyte FirmControl",
+}
+
 export default function StaffKpiPage() {
-  return <p>This is the staff &amp; KPI page.</p>
+  return <StaffView />
 }

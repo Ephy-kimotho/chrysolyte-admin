@@ -37,6 +37,16 @@ export function formatDateTime(date: Date | number | string) {
   return format(value, "EEEE, d MMM yyyy, h:mma")
 }
 
+/** Groups a Kenyan phone number for reading, e.g. `0712000001` → `0712 000 001`. */
+export function formatPhoneNumber(phone: string) {
+  const local = phone.match(/^0(\d{3})(\d{3})(\d{3})$/)
+  if (local) return `0${local[1]} ${local[2]} ${local[3]}`
+  const international = phone.match(/^\+254(\d{3})(\d{3})(\d{3})$/)
+  if (international)
+    return `+254 ${international[1]} ${international[2]} ${international[3]}`
+  return phone
+}
+
 /** Up to two initials from a name, e.g. "Super Admin" → "SA". */
 export function getInitials(name: string) {
   const words = name.trim().split(/\s+/).filter(Boolean)

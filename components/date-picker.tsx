@@ -23,6 +23,10 @@ type DatePickerProps = {
   onChange: (value: string) => void
   onBlur?: () => void
   placeholder?: string
+  /** Earliest date that can be picked. */
+  minDate?: Date
+  /** Latest date that can be picked, e.g. today for past events. */
+  maxDate?: Date
   disabled?: boolean
   "aria-invalid"?: boolean
   className?: string
@@ -41,6 +45,8 @@ export function DatePicker({
   onChange,
   onBlur,
   placeholder = "Pick a date",
+  minDate,
+  maxDate,
   disabled,
   "aria-invalid": ariaInvalid,
   className,
@@ -81,7 +87,11 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={selected}
-          defaultMonth={selected}
+          defaultMonth={selected ?? maxDate}
+          disabled={[
+            ...(minDate ? [{ before: minDate }] : []),
+            ...(maxDate ? [{ after: maxDate }] : []),
+          ]}
           onSelect={(date) => {
             if (date) onChange(format(date, "yyyy-MM-dd"))
             handleOpenChange(false)
