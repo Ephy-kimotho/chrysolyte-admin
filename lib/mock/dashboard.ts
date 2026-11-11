@@ -2,7 +2,7 @@ import type { DashboardSummary } from "@/lib/types/dashboard"
 
 // Placeholder data until the dashboard API is wired up.
 export const dashboardSummary: DashboardSummary = {
-  visibleProjects: 3,
+  visibleProjects: 2,
   overdueActivities: 2,
   lowStockNotices: 1,
   weeklyWagesDue: 26200,
@@ -16,14 +16,6 @@ export const dashboardSummary: DashboardSummary = {
       location: "Nairobi",
       progress: 35,
       dueDate: "2026-12-18",
-    },
-    {
-      id: "westlands-corporate-office",
-      name: "Westlands Corporate Office",
-      phase: "Design",
-      location: "Westlands",
-      progress: 39,
-      dueDate: "2026-10-30",
     },
     {
       id: "malaba-suites",

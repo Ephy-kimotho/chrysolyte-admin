@@ -6,6 +6,11 @@ const compactNumberFormatter = new Intl.NumberFormat("en-KE", {
   maximumFractionDigits: 1,
 })
 
+/** Formats a plain number with thousands separators, e.g. `1,250` or `12.5`. */
+export function formatNumber(value: number) {
+  return numberFormatter.format(value)
+}
+
 /** Formats an amount in Kenyan shillings, e.g. `KES 26,200`. */
 export function formatCurrency(amount: number) {
   return `KES ${numberFormatter.format(amount)}`

@@ -2,8 +2,14 @@
 
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { parseISO } from "date-fns"
 import { Plus } from "lucide-react"
-import { Controller, useForm, type DefaultValues } from "react-hook-form"
+import {
+  Controller,
+  useForm,
+  useWatch,
+  type DefaultValues,
+} from "react-hook-form"
 
 import { authInputClassName } from "@/components/auth/styles"
 import { DatePicker } from "@/components/date-picker"
@@ -29,15 +35,32 @@ import {
 import { useCreateProject } from "@/hooks/use-create-project"
 import { createProjectSchema } from "@/lib/schemas/projects"
 import {
+  contractTypes,
   projectPhases,
   type CreateProjectFormValues,
 } from "@/lib/types/projects"
 
-// No phase is preselected, so the user has to choose one.
+const selectTriggerClassName = "h-11! w-full rounded-xl bg-background/60 px-3.5"
+
+// Division and contract type aren't preselected, so the user has to choose.
 const defaultValues: DefaultValues<CreateProjectFormValues> = {
   name: "",
+  client: "",
   location: "",
+  startDate: "",
   dueDate: "",
+  supervisor: "",
+  projectManager: "",
+  leadConsultant: "",
+}
+
+function OptionalLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      {children}{" "}
+      <span className="font-normal text-muted-foreground">(optional)</span>
+    </>
+  )
 }
 
 export function AddProjectDialog() {
@@ -53,6 +76,8 @@ export function AddProjectDialog() {
     resolver: zodResolver(createProjectSchema),
     defaultValues,
   })
+  // The deadline picker can't go earlier than the start date.
+  const startDate = useWatch({ control, name: "startDate" })
 
   // Every opening starts with an empty form and no leftover error.
   function handleOpenChange(nextOpen: boolean) {
@@ -98,7 +123,7 @@ export function AddProjectDialog() {
             </p>
           )}
 
-          <div className="flex flex-col gap-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <Field data-invalid={!!errors.name}>
               <FieldLabel htmlFor="project-name">Project name</FieldLabel>
               <Input
@@ -112,74 +137,206 @@ export function AddProjectDialog() {
               <FieldError>{errors.name?.message}</FieldError>
             </Field>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <Field data-invalid={!!errors.phase}>
-                <FieldLabel htmlFor="project-phase">Phase</FieldLabel>
-                <Controller
-                  control={control}
-                  name="phase"
-                  render={({ field }) => (
-                    <Select
-                      name={field.name}
-                      // "" shows the placeholder again after the form resets.
-                      value={field.value ?? ""}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        id="project-phase"
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        aria-invalid={!!errors.phase}
-                        className="h-11! w-full rounded-xl bg-background/60 px-3.5"
-                      >
-                        <SelectValue placeholder="Choose a phase" />
-                      </SelectTrigger>
-                      <SelectContent position="popper">
-                        {projectPhases.map((phase) => (
-                          <SelectItem key={phase} value={phase}>
-                            {phase}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError>{errors.phase?.message}</FieldError>
-              </Field>
+            <Field data-invalid={!!errors.client}>
+              <FieldLabel htmlFor="project-client">Client</FieldLabel>
+              <Input
+                id="project-client"
+                autoComplete="off"
+                placeholder="e.g. Jane Wanjiku or Acme Holdings Ltd"
+                aria-invalid={!!errors.client}
+                className={authInputClassName}
+                {...register("client")}
+              />
+              <FieldError>{errors.client?.message}</FieldError>
+            </Field>
 
-              <Field data-invalid={!!errors.dueDate}>
-                <FieldLabel htmlFor="project-due-date">Due date</FieldLabel>
-                <Controller
-                  control={control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <DatePicker
-                      id="project-due-date"
+            <Field data-invalid={!!errors.phase}>
+              <FieldLabel htmlFor="project-division">Division</FieldLabel>
+              <Controller
+                control={control}
+                name="phase"
+                render={({ field }) => (
+                  <Select
+                    name={field.name}
+                    // "" shows the placeholder again after the form resets.
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger
+                      id="project-division"
                       ref={field.ref}
-                      name={field.name}
-                      value={field.value}
-                      onChange={field.onChange}
                       onBlur={field.onBlur}
-                      placeholder="Choose the due date"
-                      aria-invalid={!!errors.dueDate}
-                    />
-                  )}
-                />
-                <FieldError>{errors.dueDate?.message}</FieldError>
-              </Field>
-            </div>
+                      aria-invalid={!!errors.phase}
+                      className={selectTriggerClassName}
+                    >
+                      <SelectValue placeholder="Choose a division" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {projectPhases.map((phase) => (
+                        <SelectItem key={phase} value={phase}>
+                          {phase}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError>{errors.phase?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.contractType}>
+              <FieldLabel htmlFor="project-contract-type">
+                Contract type
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="contractType"
+                render={({ field }) => (
+                  <Select
+                    name={field.name}
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger
+                      id="project-contract-type"
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      aria-invalid={!!errors.contractType}
+                      className={selectTriggerClassName}
+                    >
+                      <SelectValue placeholder="Choose a contract type" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {contractTypes.map((contractType) => (
+                        <SelectItem key={contractType} value={contractType}>
+                          {contractType}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError>{errors.contractType?.message}</FieldError>
+            </Field>
 
             <Field data-invalid={!!errors.location}>
               <FieldLabel htmlFor="project-location">Location</FieldLabel>
               <Input
                 id="project-location"
                 autoComplete="off"
-                placeholder="e.g. Westlands, Nairobi"
+                placeholder="e.g. Kilimani, Nairobi"
                 aria-invalid={!!errors.location}
                 className={authInputClassName}
                 {...register("location")}
               />
               <FieldError>{errors.location?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.budget}>
+              <FieldLabel htmlFor="project-budget">Budget (KES)</FieldLabel>
+              <Input
+                id="project-budget"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                placeholder="e.g. 12500000"
+                aria-invalid={!!errors.budget}
+                className={authInputClassName}
+                {...register("budget", { valueAsNumber: true })}
+              />
+              <FieldError>{errors.budget?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.startDate}>
+              <FieldLabel htmlFor="project-start-date">Start date</FieldLabel>
+              <Controller
+                control={control}
+                name="startDate"
+                render={({ field }) => (
+                  <DatePicker
+                    id="project-start-date"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Choose the start date"
+                    aria-invalid={!!errors.startDate}
+                  />
+                )}
+              />
+              <FieldError>{errors.startDate?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.dueDate}>
+              <FieldLabel htmlFor="project-deadline">Deadline</FieldLabel>
+              <Controller
+                control={control}
+                name="dueDate"
+                render={({ field }) => (
+                  <DatePicker
+                    id="project-deadline"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    minDate={startDate ? parseISO(startDate) : undefined}
+                    placeholder="Choose the deadline"
+                    aria-invalid={!!errors.dueDate}
+                  />
+                )}
+              />
+              <FieldError>{errors.dueDate?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.supervisor}>
+              <FieldLabel htmlFor="project-supervisor">
+                <OptionalLabel>Supervisor</OptionalLabel>
+              </FieldLabel>
+              <Input
+                id="project-supervisor"
+                autoComplete="off"
+                placeholder="e.g. Peter Mwangi"
+                aria-invalid={!!errors.supervisor}
+                className={authInputClassName}
+                {...register("supervisor")}
+              />
+              <FieldError>{errors.supervisor?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.projectManager}>
+              <FieldLabel htmlFor="project-manager">
+                <OptionalLabel>Project manager</OptionalLabel>
+              </FieldLabel>
+              <Input
+                id="project-manager"
+                autoComplete="off"
+                placeholder="e.g. James Kamau"
+                aria-invalid={!!errors.projectManager}
+                className={authInputClassName}
+                {...register("projectManager")}
+              />
+              <FieldError>{errors.projectManager?.message}</FieldError>
+            </Field>
+
+            <Field
+              data-invalid={!!errors.leadConsultant}
+              className="sm:col-span-2"
+            >
+              <FieldLabel htmlFor="project-lead-consultant">
+                <OptionalLabel>Lead consultant</OptionalLabel>
+              </FieldLabel>
+              <Input
+                id="project-lead-consultant"
+                autoComplete="off"
+                placeholder="e.g. Eng. Njoroge"
+                aria-invalid={!!errors.leadConsultant}
+                className={authInputClassName}
+                {...register("leadConsultant")}
+              />
+              <FieldError>{errors.leadConsultant?.message}</FieldError>
             </Field>
           </div>
 

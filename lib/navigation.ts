@@ -17,6 +17,12 @@ export const navItems = [
 /** Account pages inside the dashboard shell that aren't sidebar links. */
 export const accountItems = [{ title: "Profile", href: "/profile" }]
 
+/**
+ * Detail pages whose header title differs from their section's, e.g.
+ * `/projects/[projectId]` shows "Project" rather than "Projects".
+ */
+export const detailPageTitles = [{ parentHref: "/projects", title: "Project" }]
+
 /** Every page in the dashboard shell, used for header titles and route guards. */
 export const dashboardPages = [...navItems, ...accountItems]
 

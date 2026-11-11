@@ -16,16 +16,6 @@ const projects: BoardProjectSummary[] = [
     costs: 1_670_000,
   },
   {
-    id: "westlands-corporate-office",
-    name: "Westlands Corporate Office",
-    phase: "Design",
-    progress: 39,
-    status: "Behind",
-    contractValue: 3_800_000,
-    receipts: 1_900_000,
-    costs: 420_000,
-  },
-  {
     id: "malaba-suites",
     name: "Malaba Suites",
     phase: "Construction",

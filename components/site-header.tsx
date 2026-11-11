@@ -6,14 +6,19 @@ import { UserMenu } from "@/components/user-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useCurrentMinute } from "@/hooks/use-current-minute"
 import { formatDateTime } from "@/lib/format"
-import { dashboardPages, isNavItemActive } from "@/lib/navigation"
+import {
+  dashboardPages,
+  detailPageTitles,
+  isNavItemActive,
+} from "@/lib/navigation"
 
 export function SiteHeader() {
   const pathname = usePathname()
   const now = useCurrentMinute()
-  const title = dashboardPages.find((item) =>
-    isNavItemActive(pathname, item.href)
-  )?.title
+  const title =
+    detailPageTitles.find((item) => pathname.startsWith(`${item.parentHref}/`))
+      ?.title ??
+    dashboardPages.find((item) => isNavItemActive(pathname, item.href))?.title
 
   return (
     <header className="flex items-center gap-3 p-4 md:gap-4 md:px-6 md:pt-6 md:pb-4">

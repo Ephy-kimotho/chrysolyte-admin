@@ -1,6 +1,6 @@
 import { getProjectsSnapshot } from "@/lib/mock/projects"
+import { getWeeklyWagesDue } from "@/lib/mock/wages"
 import type {
-  ContractType,
   CreateTransactionFormValues,
   Financials,
   FinancialTransaction,
@@ -8,32 +8,8 @@ import type {
 
 type StoredTransaction = Omit<FinancialTransaction, "projectName">
 
-type ProjectContract = {
-  contractType: ContractType
-  budget: number
-  weeklyWagesDue: number
-}
-
 // In-memory stand-in for a financials API. Changes last until the page reloads.
-// Figures match the board analysis mock.
-const contracts: Record<string, ProjectContract> = {
-  "kilimani-residence": {
-    contractType: "Full Contract",
-    budget: 12_500_000,
-    weeklyWagesDue: 26_200,
-  },
-  "westlands-corporate-office": {
-    contractType: "Design Only",
-    budget: 3_800_000,
-    weeklyWagesDue: 0,
-  },
-  "malaba-suites": {
-    contractType: "Full Contract",
-    budget: 18_000_000,
-    weeklyWagesDue: 0,
-  },
-}
-
+// Budgets and contract types come from the projects.
 let transactions: StoredTransaction[] = [
   {
     id: "kilimani-mobilisation",
@@ -60,30 +36,6 @@ let transactions: StoredTransaction[] = [
     amount: 420_000,
   },
   {
-    id: "westlands-deposit",
-    date: "2026-09-10",
-    projectId: "westlands-corporate-office",
-    type: "Client receipt",
-    description: "Design fee deposit",
-    amount: 1_900_000,
-  },
-  {
-    id: "westlands-survey",
-    date: "2026-09-28",
-    projectId: "westlands-corporate-office",
-    type: "Project cost",
-    description: "Topographical survey",
-    amount: 180_000,
-  },
-  {
-    id: "westlands-structural",
-    date: "2026-10-14",
-    projectId: "westlands-corporate-office",
-    type: "Project cost",
-    description: "Structural engineering consultant",
-    amount: 240_000,
-  },
-  {
     id: "malaba-mobilisation",
     date: "2026-10-22",
     projectId: "malaba-suites",
@@ -103,7 +55,6 @@ export function getFinancialsSnapshot(): Financials {
 
   return {
     projects: projects.map((project) => {
-      const contract = contracts[project.id]
       const projectTransactions = transactions.filter(
         (item) => item.projectId === project.id
       )
@@ -113,19 +64,19 @@ export function getFinancialsSnapshot(): Financials {
       const recordedCosts = sumAmounts(
         projectTransactions.filter((item) => item.type === "Project cost")
       )
-      const budget = contract?.budget ?? null
 
       return {
         projectId: project.id,
         code: project.code,
         name: project.name,
-        contractType: contract?.contractType ?? null,
-        budget,
+        contractType: project.contractType,
+        budget: project.budget,
         clientPaid,
         recordedCosts,
-        weeklyWagesDue: contract?.weeklyWagesDue ?? 0,
-        budgetRemaining: budget === null ? null : budget - recordedCosts,
-        clientBalance: budget === null ? null : budget - clientPaid,
+        // Net wages due this Friday, from the site wage projection.
+        weeklyWagesDue: getWeeklyWagesDue(project.id),
+        budgetRemaining: project.budget - recordedCosts,
+        clientBalance: project.budget - clientPaid,
       }
     }),
     transactions: transactions

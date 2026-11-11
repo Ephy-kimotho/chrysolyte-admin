@@ -1,8 +1,8 @@
 import {
-  FinancialsTableCard,
-  financialsCellClassName,
-  financialsHeadClassName,
-} from "@/components/financials/financials-table"
+  TableCard,
+  tableCellClassName,
+  tableHeadClassName,
+} from "@/components/table-card"
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ type TransactionsTableProps = {
 
 export function TransactionsTable({ transactions }: TransactionsTableProps) {
   return (
-    <FinancialsTableCard
+    <TableCard
       titleId="transactions-heading"
       title="Transactions"
       titleClassName="pt-2 text-lg"
@@ -28,13 +28,11 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
       <Table className="min-w-[40rem]">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className={financialsHeadClassName}>Date</TableHead>
-            <TableHead className={financialsHeadClassName}>Project</TableHead>
-            <TableHead className={financialsHeadClassName}>Type</TableHead>
-            <TableHead className={financialsHeadClassName}>
-              Description
-            </TableHead>
-            <TableHead className={financialsHeadClassName}>Amount</TableHead>
+            <TableHead className={tableHeadClassName}>Date</TableHead>
+            <TableHead className={tableHeadClassName}>Project</TableHead>
+            <TableHead className={tableHeadClassName}>Type</TableHead>
+            <TableHead className={tableHeadClassName}>Description</TableHead>
+            <TableHead className={tableHeadClassName}>Amount</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -50,22 +48,20 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           ) : (
             transactions.map((transaction) => (
               <TableRow key={transaction.id}>
-                <TableCell
-                  className={`${financialsCellClassName} tabular-nums`}
-                >
+                <TableCell className={`${tableCellClassName} tabular-nums`}>
                   <time dateTime={transaction.date}>{transaction.date}</time>
                 </TableCell>
-                <TableCell className={financialsCellClassName}>
+                <TableCell className={tableCellClassName}>
                   {transaction.projectName}
                 </TableCell>
-                <TableCell className={financialsCellClassName}>
+                <TableCell className={tableCellClassName}>
                   {transaction.type}
                 </TableCell>
-                <TableCell className={financialsCellClassName}>
+                <TableCell className={tableCellClassName}>
                   {transaction.description}
                 </TableCell>
                 <TableCell
-                  className={`${financialsCellClassName} whitespace-nowrap tabular-nums`}
+                  className={`${tableCellClassName} whitespace-nowrap tabular-nums`}
                 >
                   {formatCurrency(transaction.amount)}
                 </TableCell>
@@ -74,6 +70,6 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           )}
         </TableBody>
       </Table>
-    </FinancialsTableCard>
+    </TableCard>
   )
 }

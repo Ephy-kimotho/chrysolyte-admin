@@ -1,10 +1,7 @@
 import type { z } from "zod"
 
 import type { createTransactionSchema } from "@/lib/schemas/financials"
-
-export const contractTypes = ["Full Contract", "Design Only"] as const
-
-export type ContractType = (typeof contractTypes)[number]
+import type { ContractType } from "@/lib/types/projects"
 
 export const transactionTypes = ["Client receipt", "Project cost"] as const
 
@@ -28,19 +25,18 @@ export type ProjectFinancials = {
   /** Reference code, e.g. `CEL-C-260806-001`. */
   code: string
   name: string
-  /** Null until the project's contract is set up. */
-  contractType: ContractType | null
-  /** Contract value; null until the contract is set up. */
-  budget: number | null
+  contractType: ContractType
+  /** Contract value. */
+  budget: number
   /** Sum of client receipts. */
   clientPaid: number
   /** Sum of project costs. */
   recordedCosts: number
   weeklyWagesDue: number
   /** Budget minus recorded costs. */
-  budgetRemaining: number | null
+  budgetRemaining: number
   /** Budget minus client receipts: what the client still owes. */
-  clientBalance: number | null
+  clientBalance: number
 }
 
 export type Financials = {
