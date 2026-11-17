@@ -11,6 +11,9 @@ import type { NextConfig } from "next"
 const API_PROXY_TARGET = process.env.API_PROXY_TARGET
 
 const nextConfig: NextConfig = {
+    experimental: {
+        agentUpgrade: "security",
+    },
     async rewrites() {
         if (!API_PROXY_TARGET) return []
         return [

@@ -1,6 +1,7 @@
 export const navItems = [
   { title: "Dashboard", href: "/dashboard" },
   { title: "Projects", href: "/projects" },
+  { title: "Clients", href: "/clients" },
   { title: "Site Reports", href: "/site-reports" },
   { title: "Construction", href: "/construction" },
   { title: "Project Consultants", href: "/project-consultants" },

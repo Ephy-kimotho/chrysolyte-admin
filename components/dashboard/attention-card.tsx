@@ -2,9 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export type AttentionItem = {
   count: number
-  /** Text after the count when it is 1, e.g. "activity is overdue." */
   one: string
-  /** Text after the count otherwise, e.g. "activities are overdue." */
   other: string
 }
 

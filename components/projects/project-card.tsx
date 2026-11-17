@@ -95,7 +95,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <Progress
           value={project.progress}
           aria-label={`${project.name} progress`}
-          className="mt-1 h-2 [&>[data-slot=progress-indicator]]:bg-chart-1"
+          className="mt-1 h-2 *:data-[slot=progress-indicator]:bg-chart-1"
         />
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="tabular-nums">
