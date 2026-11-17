@@ -11,7 +11,7 @@ import {
   useSyncExternalStore,
   type PropsWithChildren,
 } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { WorkspaceLoader } from "@/components/workspace-loader"
 import * as authApi from "@/lib/api/auth"
 import {
@@ -20,8 +20,12 @@ import {
   subscribeAccessToken,
 } from "@/lib/auth-token"
 import { onUnauthorized, refreshAccessToken } from "@/lib/axios"
-import { dashboardPages } from "@/lib/navigation"
-import type { LoginFormValues, AuthUser } from "@/lib/types/auth"
+import { canAccessPage, dashboardPages, getHomeRoute } from "@/lib/navigation"
+import {
+  isClientUser,
+  type AuthUser,
+  type LoginFormValues,
+} from "@/lib/types/auth"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
 
@@ -30,16 +34,17 @@ interface AuthContextValue {
   accessToken: string | null
   status: AuthStatus
   isLoggedIn: boolean
+  /** Signed in as a client account, which only sees its projects. */
+  isClient: boolean
   login: (values: LoginFormValues) => Promise<AuthUser>
+  /** Signs in with an emailed one-time code instead of a password. */
+  loginWithOtp: (identifier: string, code: string) => Promise<AuthUser>
   logout: () => Promise<void>
   /** Re-fetches `/auth/me` and updates `user` (e.g. after a password change). */
   refreshUser: () => Promise<AuthUser>
 }
 
 export const LOGIN_ROUTE = "/login"
-
-/** Where a signed-in user lands after login or when visiting an auth screen. */
-export const HOME_ROUTE = "/dashboard"
 
 /** Screens under `app/(auth)`, reachable without a session. */
 const PUBLIC_ROUTES = [LOGIN_ROUTE, "/forgot-password", "/reset-password"]
@@ -83,6 +88,7 @@ const getServerToken = () => null
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const router = useRouter()
+  const pathname = usePathname()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [status, setStatus] = useState<AuthStatus>("loading")
   const bootstrapped = useRef(false)
@@ -107,7 +113,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (bootstrapped.current) return
     bootstrapped.current = true
 
-    const pathname = window.location.pathname
+    const startPath = window.location.pathname
 
     async function bootstrap() {
       try {
@@ -115,12 +121,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const profile = await authApi.fetchMe()
         setUser(profile)
         setStatus("authenticated")
-        if (pathname === "/" || isPublicRoute(pathname)) {
-          router.replace(HOME_ROUTE)
+        if (startPath === "/" || isPublicRoute(startPath)) {
+          router.replace(getHomeRoute(profile))
         }
       } catch {
         endSession()
-        if (shouldRedirectToLogin(pathname)) router.replace(LOGIN_ROUTE)
+        if (shouldRedirectToLogin(startPath)) router.replace(LOGIN_ROUTE)
       }
     }
 
@@ -137,13 +143,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     })
   }, [router, endSession])
 
-  const login = useCallback(async (values: LoginFormValues) => {
-    await authApi.login(values)
+  // Both sign-in methods store the token first, then load the profile.
+  const startSession = useCallback(async () => {
     const profile = await authApi.fetchMe()
     setUser(profile)
     setStatus("authenticated")
     return profile
   }, [])
+
+  const login = useCallback(
+    async (values: LoginFormValues) => {
+      await authApi.login(values)
+      return startSession()
+    },
+    [startSession]
+  )
+
+  const loginWithOtp = useCallback(
+    async (identifier: string, code: string) => {
+      await authApi.verifyLoginOtp(identifier, code)
+      return startSession()
+    },
+    [startSession]
+  )
 
   const refreshUser = useCallback(async () => {
     const profile = await authApi.fetchMe()
@@ -159,22 +181,36 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, [endSession])
 
+  // A signed-in user on a page their account can't open, e.g. a client on
+  // /dashboard. They're sent home, and the page never renders meanwhile.
+  const isOffLimits =
+    user !== null &&
+    isAppRoute(pathname) &&
+    !isPublicRoute(pathname) &&
+    !canAccessPage(user, pathname)
+
+  useEffect(() => {
+    if (isOffLimits && user) router.replace(getHomeRoute(user))
+  }, [isOffLimits, user, router])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       accessToken,
       status,
       isLoggedIn: status === "authenticated" && user !== null,
+      isClient: user !== null && isClientUser(user),
       login,
+      loginWithOtp,
       logout,
       refreshUser,
     }),
-    [user, accessToken, status, login, logout, refreshUser]
+    [user, accessToken, status, login, loginWithOtp, logout, refreshUser]
   )
 
   return (
     <AuthContext.Provider value={value}>
-      {status === "loading" ? <WorkspaceLoader /> : children}
+      {status === "loading" || isOffLimits ? <WorkspaceLoader /> : children}
     </AuthContext.Provider>
   )
 }

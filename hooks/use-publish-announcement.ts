@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { announcementsQueryKey } from "@/hooks/use-announcements"
+import { getDisplayName } from "@/lib/format"
 import * as announcementsApi from "@/lib/mock/announcements"
 import type { PublishAnnouncementFormValues } from "@/lib/types/announcements"
 import { useAuth } from "@/providers/auth-provider"
@@ -17,7 +18,10 @@ export function usePublishAnnouncement() {
 
   return useMutation({
     mutationFn: ({ data }: PublishAnnouncementOptions) =>
-      announcementsApi.publishAnnouncement(data, user?.full_name ?? "Admin"),
+      announcementsApi.publishAnnouncement(
+        data,
+        user ? getDisplayName(user) : "Admin"
+      ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: announcementsQueryKey }),
   })

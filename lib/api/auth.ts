@@ -1,6 +1,10 @@
 import { API_BASE, axiosInstance } from "@/lib/axios"
 import { pickAccessToken, setAccessToken } from "@/lib/auth-token"
-import type { LoginFormValues, AuthUser} from "@/lib/types/auth"
+import type {
+  AuthUser,
+  LoginFormValues,
+  OtpRequestResponse,
+} from "@/lib/types/auth"
 import axios from "axios"
 
 /*
@@ -13,6 +17,28 @@ export async function login(values: LoginFormValues) {
   const response = await axios.post(`${API_BASE}/auth/login`, values, {
     withCredentials: true,
   })
+  const token = pickAccessToken(response.data)
+  setAccessToken(token)
+  return token
+}
+
+/** Emails (and WhatsApps) a 6-digit login code. The reply is the same whether or not the account exists. */
+export async function requestLoginOtp(identifier: string) {
+  const response = await axios.post<OtpRequestResponse>(
+    `${API_BASE}/auth/otp/request`,
+    { identifier },
+    { withCredentials: true }
+  )
+  return response.data
+}
+
+/** Trades a login code for an access token, like a password login. */
+export async function verifyLoginOtp(identifier: string, code: string) {
+  const response = await axios.post(
+    `${API_BASE}/auth/otp/verify`,
+    { identifier, code },
+    { withCredentials: true }
+  )
   const token = pickAccessToken(response.data)
   setAccessToken(token)
   return token

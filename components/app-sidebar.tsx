@@ -18,12 +18,15 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useLogout } from "@/hooks/use-logout"
-import { isNavItemActive, navItems } from "@/lib/navigation"
+import { getHomeRoute, getNavItems, isNavItemActive } from "@/lib/navigation"
+import { useAuth } from "@/providers/auth-provider"
 
 export function AppSidebar() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
   const logoutMutation = useLogout()
+  const { user } = useAuth()
+  const items = getNavItems(user)
 
   // The mobile drawer stays open across client navigation unless closed here.
   const closeMobileSidebar = () => setOpenMobile(false)
@@ -32,7 +35,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="gap-4 p-4">
         <Link
-          href="/dashboard"
+          href={user ? getHomeRoute(user) : "/dashboard"}
           onClick={closeMobileSidebar}
           className="w-fit rounded-lg outline-hidden focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
@@ -54,7 +57,7 @@ export function AppSidebar() {
         <SidebarGroup className="px-4 py-0">
           <SidebarGroupContent>
             <SidebarMenu className="gap-1.5">
-              {navItems.map((item) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

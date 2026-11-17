@@ -1,8 +1,6 @@
 import { z } from "zod"
 
-// Kenyan mobile numbers: 07XXXXXXXX, 01XXXXXXXX, or the +254 form.
-const kenyanPhonePattern = /^(?:\+254|0)[17]\d{8}$/
-const invalidPhoneMessage = "Enter a valid number, e.g. 0712 345 678"
+import { invalidPhoneMessage, kenyanPhonePattern } from "@/lib/schemas/phone"
 
 const phoneDigitsSchema = z
   .string()

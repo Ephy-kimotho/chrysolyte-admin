@@ -1,10 +1,8 @@
 import { z } from "zod"
 
 import { imageFileSchema } from "@/lib/schemas/files"
+import { invalidPhoneMessage, kenyanPhonePattern } from "@/lib/schemas/phone"
 import { staffDivisions, staffHealthStatuses } from "@/lib/types/staff"
-
-// Kenyan mobile numbers: 07XXXXXXXX, 01XXXXXXXX, or the +254 form.
-const kenyanPhonePattern = /^(?:\+254|0)[17]\d{8}$/
 
 export const createStaffMemberSchema = z.object({
   /** Optional; initials show until a photo is added. */
@@ -30,7 +28,7 @@ export const createStaffMemberSchema = z.object({
       z
         .string()
         .min(1, "Enter a phone number")
-        .regex(kenyanPhonePattern, "Enter a valid number, e.g. 0712 345 678")
+        .regex(kenyanPhonePattern, invalidPhoneMessage)
     ),
   division: z.enum(staffDivisions, "Choose a division"),
   role: z.string().trim().min(1, "Enter the role"),

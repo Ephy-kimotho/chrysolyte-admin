@@ -1,3 +1,5 @@
+import { isClientUser, type AuthUser } from "@/lib/types/auth"
+
 export const navItems = [
   { title: "Dashboard", href: "/dashboard" },
   { title: "Projects", href: "/projects" },
@@ -12,7 +14,7 @@ export const navItems = [
   { title: "Staff & KPI", href: "/staff-kpi" },
   { title: "Board Analysis", href: "/board-analysis" },
   { title: "Announcements", href: "/announcements" },
-  // { title: "Users", href: "/users" },
+  { title: "Users", href: "/users" },
 ]
 
 /** Account pages inside the dashboard shell that aren't sidebar links. */
@@ -29,4 +31,24 @@ export const dashboardPages = [...navItems, ...accountItems]
 
 export function isNavItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+/** The only sections a client account can open, including their detail pages. */
+const clientSections = ["/projects"]
+
+/** Where a signed-in user lands after login or when a page is off limits. */
+export function getHomeRoute(user: AuthUser) {
+  return isClientUser(user) ? "/projects" : "/dashboard"
+}
+
+/** Sidebar links the user is allowed to see. */
+export function getNavItems(user: AuthUser | null) {
+  if (!user || !isClientUser(user)) return navItems
+  return navItems.filter((item) => clientSections.includes(item.href))
+}
+
+/** Whether the user may open a dashboard page. Staff can open every page. */
+export function canAccessPage(user: AuthUser, pathname: string) {
+  if (!isClientUser(user)) return true
+  return clientSections.some((href) => isNavItemActive(pathname, href))
 }

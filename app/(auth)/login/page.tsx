@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 
-import { AuthHeader } from "@/components/auth/auth-header"
-import { LoginForm } from "@/components/auth/login-form"
+import { LoginTabs } from "@/components/auth/login-tabs"
 
 export const metadata: Metadata = {
   title: "Sign in · Chrysolyte FirmControl",
@@ -10,11 +9,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="mx-auto w-full max-w-sm">
-      <AuthHeader
-        title="Sign in"
-        description="Use your staff email and password to continue."
-      />
-      <LoginForm />
+      <LoginTabs />
     </div>
   )
 }

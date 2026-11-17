@@ -4,6 +4,7 @@ import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
+import { AuthAlert } from "@/components/auth/auth-alert"
 import { PasswordInput } from "@/components/auth/password-input"
 import {
   authInputClassName,
@@ -38,15 +39,12 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       {loginMutation.isError && (
-        <p
-          role="alert"
-          className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
-        >
+        <AuthAlert>
           {getErrorMessage(
             loginMutation.error,
             "We couldn't sign you in. Try again."
           )}
-        </p>
+        </AuthAlert>
       )}
 
       <div className="flex flex-col gap-5">

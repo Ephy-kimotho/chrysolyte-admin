@@ -21,6 +21,12 @@ export const loginSchema = z.object({
 
 export const forgotPasswordSchema = z.object({ email })
 
+export const otpRequestSchema = z.object({ identifier: email })
+
+export const otpVerifySchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
+})
+
 export const resetPasswordSchema = z
   .object({
     password: passwordSchema,

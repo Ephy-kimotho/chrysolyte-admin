@@ -16,14 +16,15 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useLogout } from "@/hooks/use-logout"
-import { formatDateTime, humanizeSlug } from "@/lib/format"
-import type { AuthUser } from "@/lib/types/auth"
+import { formatDateTime, formatRole, getDisplayName } from "@/lib/format"
+import { isClientUser, type StaffUser } from "@/lib/types/auth"
 import { useAuth } from "@/providers/auth-provider"
 
 export function ProfileView() {
   const { user } = useAuth()
 
-  if (!user) return null
+  // Clients are redirected away from /profile; this only narrows the type.
+  if (!user || isClientUser(user)) return null
 
   return (
     <div className="flex max-w-5xl flex-col gap-4">
@@ -33,7 +34,8 @@ export function ProfileView() {
   )
 }
 
-function ProfileCard({ user }: { user: AuthUser }) {
+function ProfileCard({ user }: { user: StaffUser }) {
+  const name = getDisplayName(user)
   const details = [
     { label: "Username", value: user.username },
     { label: "Email", value: user.email },
@@ -49,15 +51,15 @@ function ProfileCard({ user }: { user: AuthUser }) {
       <CardContent className="flex flex-col gap-6 px-5 sm:px-6">
         <div className="flex items-center gap-4">
           <UserAvatar
-            name={user.full_name}
+            name={name}
             className="size-14 text-lg sm:size-16 sm:text-xl"
           />
           <div className="flex min-w-0 flex-col gap-1.5">
             <h2 className="truncate font-heading text-xl font-bold text-heading sm:text-2xl">
-              {user.full_name}
+              {name}
             </h2>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="secondary">{humanizeSlug(user.role)}</Badge>
+              <Badge variant="secondary">{formatRole(user.role)}</Badge>
               <StatusBadge user={user} />
             </div>
           </div>
@@ -82,7 +84,7 @@ function ProfileCard({ user }: { user: AuthUser }) {
   )
 }
 
-function StatusBadge({ user }: { user: AuthUser }) {
+function StatusBadge({ user }: { user: StaffUser }) {
   if (user.is_locked) return <Badge variant="destructive">Locked</Badge>
   if (!user.active) return <Badge variant="warning">Inactive</Badge>
   return <Badge className="bg-primary/15 text-primary">Active</Badge>
