@@ -20,7 +20,12 @@ import {
   subscribeAccessToken,
 } from "@/lib/auth-token"
 import { onUnauthorized, refreshAccessToken } from "@/lib/axios"
-import { canAccessPage, dashboardPages, getHomeRoute } from "@/lib/navigation"
+import {
+  CHANGE_PASSWORD_ROUTE,
+  canAccessPage,
+  dashboardPages,
+  getHomeRoute,
+} from "@/lib/navigation"
 import {
   isClientUser,
   type AuthUser,
@@ -60,10 +65,14 @@ export function isPublicRoute(pathname: string) {
 }
 
 /**
- * Screens under `app/(dashboard)` that need a session. These come from
- * `lib/navigation.ts`, so a page added there is protected automatically.
+ * Screens that need a session: those under `app/(dashboard)`, which come from
+ * `lib/navigation.ts` so a page added there is protected automatically, plus
+ * the change-password screen.
  */
-const PROTECTED_ROUTES = dashboardPages.map((item) => item.href)
+const PROTECTED_ROUTES = [
+  ...dashboardPages.map((item) => item.href),
+  CHANGE_PASSWORD_ROUTE,
+]
 
 /**
  * Whether the path is a real route. Anything else is a 404, which renders its

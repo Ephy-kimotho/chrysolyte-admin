@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { clientsQueryKey } from "@/hooks/use-clients"
 import * as clientsApi from "@/lib/api/clients"
+import { notifyError, notifySuccess } from "@/lib/notify"
 import type { CreateClientFormValues } from "@/lib/types/clients"
 
 interface CreateClientOptions {
@@ -15,8 +16,15 @@ export function useCreateClient() {
   return useMutation({
     mutationFn: ({ data }: CreateClientOptions) =>
       clientsApi.createClient(data),
-    // Refreshes every client list, whatever it's searching for.
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: clientsQueryKey }),
+    onSuccess: (_, { data }) => {
+      notifySuccess(
+        "Client added",
+        `${data.name} can now be linked to projects.`
+      )
+      // Refreshes every client list, whatever it's searching for.
+      return queryClient.invalidateQueries({ queryKey: clientsQueryKey })
+    },
+    onError: (error, { data }) =>
+      notifyError(`Couldn't add ${data.name}`, error),
   })
 }

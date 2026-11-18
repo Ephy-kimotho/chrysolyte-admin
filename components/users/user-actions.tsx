@@ -22,13 +22,12 @@ import { useDeleteUser } from "@/hooks/use-delete-user"
 import { useDisableUser } from "@/hooks/use-disable-user"
 import { useEnableUser } from "@/hooks/use-enable-user"
 import { useUnlockUser } from "@/hooks/use-unlock-user"
-import { getErrorMessage } from "@/lib/api/errors"
 import { formatShortDateTime } from "@/lib/format"
 import { isClientUser } from "@/lib/types/auth"
 import type { User } from "@/lib/types/users"
 import { useAuth } from "@/providers/auth-provider"
 
-type OpenDialog = "disable" | "unlock" | "delete" | "enable-failed" | null
+type OpenDialog = "disable" | "unlock" | "delete" | null
 
 /** The ⋮ menu for a user, with the confirmations its actions need. */
 export function UserActions({ user }: { user: User }) {
@@ -50,7 +49,7 @@ export function UserActions({ user }: { user: User }) {
 
   if (isSelf && !canUnlock) return null
 
-  const options = { userId: user.id }
+  const options = { userId: user.id, name: user.fullName }
   const closeDialog = () => setOpenDialog(null)
 
   // The dialogs open from a menu that's gone by the time they close, so
@@ -60,13 +59,10 @@ export function UserActions({ user }: { user: User }) {
     triggerRef.current?.focus()
   }
 
-  // Enabling only restores access, so it runs without asking. A failure
-  // opens a dialog, since there's nowhere else to show it.
+  // Enabling only restores access, so it runs without asking. The hook's
+  // toast reports how it went.
   function enable() {
-    enableUser.mutate(options, {
-      onSuccess: closeDialog,
-      onError: () => setOpenDialog("enable-failed"),
-    })
+    enableUser.mutate(options)
   }
 
   // Each dialog starts without the last attempt's error.
@@ -182,23 +178,6 @@ export function UserActions({ user }: { user: User }) {
         error={deleteUser.error}
         errorFallback="We couldn't delete this user. Try again."
         onConfirm={() => deleteUser.mutate(options, { onSuccess: closeDialog })}
-      />
-
-      <ConfirmUserActionDialog
-        open={openDialog === "enable-failed"}
-        onOpenChange={(isOpen) => !isOpen && closeDialog()}
-        onCloseAutoFocus={focusTrigger}
-        title={`We couldn't enable ${user.fullName}`}
-        description={getErrorMessage(
-          enableUser.error,
-          "Something went wrong. Try again."
-        )}
-        confirmLabel="Try again"
-        pendingLabel="Enabling…"
-        isPending={enableUser.isPending}
-        error={null}
-        errorFallback=""
-        onConfirm={enable}
       />
     </>
   )

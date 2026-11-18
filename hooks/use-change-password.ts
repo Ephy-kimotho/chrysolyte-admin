@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 
 import * as authApi from "@/lib/api/auth"
+import { notifyError, notifySuccess } from "@/lib/notify"
 import type { ChangePasswordFormValues } from "@/lib/types/auth"
 import { useAuth } from "@/providers/auth-provider"
 
@@ -15,7 +16,14 @@ export function useChangePassword() {
   return useMutation({
     mutationFn: ({ data }: ChangePasswordOptions) =>
       authApi.changePassword(data.currentPassword, data.newPassword),
-    // The profile carries `must_change_password`, which this can clear.
-    onSuccess: () => refreshUser(),
+    onSuccess: () => {
+      notifySuccess(
+        "Password changed",
+        "Use your new password the next time you sign in."
+      )
+      // The profile carries `must_change_password`, which this can clear.
+      return refreshUser()
+    },
+    onError: (error) => notifyError("Couldn't change your password", error),
   })
 }

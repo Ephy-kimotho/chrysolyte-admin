@@ -22,6 +22,11 @@ export interface OtpRequestResponse {
   expires_in_seconds: number
 }
 
+/** `POST /auth/password-reset`. Worded the same whether or not the email is registered. */
+export interface PasswordResetRequestResponse {
+  message: string
+}
+
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
 
 export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
@@ -61,4 +66,12 @@ export type AuthUser = StaffUser | ClientUser
 
 export function isClientUser(user: AuthUser): user is ClientUser {
   return "subject_type" in user && user.subject_type === "client"
+}
+
+/**
+ * A staff account still on the temporary password it was created with. It
+ * must choose its own before it can open anything else.
+ */
+export function mustChangePassword(user: AuthUser) {
+  return !isClientUser(user) && user.must_change_password
 }

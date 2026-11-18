@@ -18,7 +18,6 @@ function toUser(user: UserResponse): User {
     email: user.email,
     phone: user.phone,
     fullName: user.full_name,
-    // Older accounts may only have the single `role`.
     roles: user.roles.length > 0 ? user.roles : [user.role],
     projectIds: user.project_ids,
     active: user.active,

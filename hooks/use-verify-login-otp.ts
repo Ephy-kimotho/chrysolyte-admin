@@ -1,7 +1,9 @@
 import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 
+import { getDisplayName } from "@/lib/format"
 import { getHomeRoute } from "@/lib/navigation"
+import { notifyError, notifySuccess } from "@/lib/notify"
 import { useAuth } from "@/providers/auth-provider"
 
 interface VerifyLoginOtpOptions {
@@ -20,7 +22,9 @@ export function useVerifyLoginOtp() {
     mutationFn: ({ data }: VerifyLoginOtpOptions) =>
       loginWithOtp(data.identifier, data.code),
     onSuccess: (user) => {
+      notifySuccess("Signed in", `Welcome back, ${getDisplayName(user)}.`)
       router.replace(getHomeRoute(user))
     },
+    onError: (error) => notifyError("Couldn't verify your code", error),
   })
 }

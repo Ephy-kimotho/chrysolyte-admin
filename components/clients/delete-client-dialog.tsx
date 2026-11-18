@@ -40,7 +40,7 @@ export function DeleteClientDialog({
     // Stay open until the delete finishes, so a failure can be shown here.
     event.preventDefault()
     deleteClient.mutate(
-      { id: client.id },
+      { id: client.id, name: client.name },
       { onSuccess: () => onOpenChange(false) }
     )
   }

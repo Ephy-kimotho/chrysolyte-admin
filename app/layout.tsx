@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { DM_Sans, Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
+import { AppToaster } from "@/components/app-toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { QueryProvider } from "@/providers/query-provider"
@@ -43,6 +44,7 @@ export default function RootLayout({
           <AuthProvider>
             <TooltipProvider>{children}</TooltipProvider>
           </AuthProvider>
+          <AppToaster />
         </QueryProvider>
       </body>
     </html>

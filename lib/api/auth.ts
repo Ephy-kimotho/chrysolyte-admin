@@ -4,6 +4,7 @@ import type {
   AuthUser,
   LoginFormValues,
   OtpRequestResponse,
+  PasswordResetRequestResponse,
 } from "@/lib/types/auth"
 import axios from "axios"
 
@@ -53,12 +54,14 @@ export async function logout() {
   await axiosInstance.post("/auth/logout")
 }
 
+/** Emails a password reset link. The reply is the same whether or not the account exists. */
 export async function requestPasswordReset(email: string) {
-  await axios.post(
+  const response = await axios.post<PasswordResetRequestResponse>(
     `${API_BASE}/auth/password-reset`,
     { email },
     { withCredentials: true }
   )
+  return response.data
 }
 
 export async function confirmPasswordReset(token: string, newPassword: string) {

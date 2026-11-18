@@ -1,4 +1,14 @@
-import { isClientUser, type AuthUser } from "@/lib/types/auth"
+import {
+  isClientUser,
+  mustChangePassword,
+  type AuthUser,
+} from "@/lib/types/auth"
+
+/**
+ * Where a staff account on a temporary password sets its own. It sits in the
+ * auth layout but needs a session, so it's neither public nor in the sidebar.
+ */
+export const CHANGE_PASSWORD_ROUTE = "/change-password"
 
 export const navItems = [
   { title: "Dashboard", href: "/dashboard" },
@@ -38,6 +48,7 @@ const clientSections = ["/projects"]
 
 /** Where a signed-in user lands after login or when a page is off limits. */
 export function getHomeRoute(user: AuthUser) {
+  if (mustChangePassword(user)) return CHANGE_PASSWORD_ROUTE
   return isClientUser(user) ? "/projects" : "/dashboard"
 }
 
@@ -47,8 +58,14 @@ export function getNavItems(user: AuthUser | null) {
   return navItems.filter((item) => clientSections.includes(item.href))
 }
 
-/** Whether the user may open a dashboard page. Staff can open every page. */
+/**
+ * Whether the user may open a signed-in page. A temporary password locks the
+ * account to the change-password screen, which is closed to everyone else,
+ * so changing it sends the user on to their home page.
+ */
 export function canAccessPage(user: AuthUser, pathname: string) {
+  if (mustChangePassword(user)) return pathname === CHANGE_PASSWORD_ROUTE
+  if (pathname === CHANGE_PASSWORD_ROUTE) return false
   if (!isClientUser(user)) return true
   return clientSections.some((href) => isNavItemActive(pathname, href))
 }
