@@ -1,13 +1,7 @@
-import type {
-  CreateProgrammeActivityFormValues,
-  Milestone,
-  ProgrammeActivity,
-} from "@/lib/types/programme"
+import type { Milestone } from "@/lib/types/programme"
 
-// In-memory stand-in for the work programme API. The milestones list reads the
-// real API (`lib/api/programme.ts`); these mock milestones only feed the mock
-// projects' progress until the remaining mocks go. Changes last until the page
-// reloads.
+// Mock milestones that feed the mock projects' progress until the remaining
+// mocks go. The programme tab reads the real API (`lib/api/programme.ts`).
 const milestones: Milestone[] = [
   {
     id: "kilimani-substructure",
@@ -51,29 +45,6 @@ const milestones: Milestone[] = [
   },
 ]
 
-let activities: ProgrammeActivity[] = [
-  {
-    id: "kilimani-ground-walling",
-    projectId: "kilimani-residence",
-    activity: "Complete ground floor walling",
-    owner: "James Kamau",
-    deadline: "2026-08-12",
-    progress: 60,
-    material: "Cement",
-    forecastQuantity: 80,
-  },
-  {
-    id: "kilimani-column-formwork",
-    projectId: "kilimani-residence",
-    activity: "Column formwork",
-    owner: "Peter Mwangi",
-    deadline: "2026-08-15",
-    progress: 45,
-    material: "Timber",
-    forecastQuantity: 120,
-  },
-]
-
 /**
  * Overall progress from milestone weight × milestone completion, rounded to a
  * whole percentage, or null when the project has no milestones yet.
@@ -88,24 +59,4 @@ export function getMilestoneProgress(projectId: string) {
     0
   )
   return Math.round(weighted / 100)
-}
-
-export async function listProgrammeActivities(projectId: string) {
-  return activities
-    .filter((item) => item.projectId === projectId)
-    .sort((a, b) => a.deadline.localeCompare(b.deadline))
-}
-
-export async function createProgrammeActivity(
-  projectId: string,
-  data: CreateProgrammeActivityFormValues
-) {
-  const activity: ProgrammeActivity = {
-    id: crypto.randomUUID(),
-    projectId,
-    ...data,
-    material: data.material || null,
-  }
-  activities = [...activities, activity]
-  return activity
 }

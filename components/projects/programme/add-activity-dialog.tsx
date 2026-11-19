@@ -2,8 +2,14 @@
 
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { parseISO } from "date-fns"
 import { Plus } from "lucide-react"
-import { Controller, useForm, type DefaultValues } from "react-hook-form"
+import {
+  Controller,
+  useForm,
+  useWatch,
+  type DefaultValues,
+} from "react-hook-form"
 
 import { authInputClassName } from "@/components/auth/styles"
 import { DatePicker } from "@/components/date-picker"
@@ -18,15 +24,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useCreateProgrammeActivity } from "@/hooks/use-create-programme-activity"
-import { createProgrammeActivitySchema } from "@/lib/schemas/programme"
+import { useMilestones } from "@/hooks/use-milestones"
+import { getErrorMessage } from "@/lib/api/errors"
+import {
+  activityMaxLength,
+  createProgrammeActivitySchema,
+} from "@/lib/schemas/programme"
 import type { CreateProgrammeActivityFormValues } from "@/lib/types/programme"
 
+const selectTriggerClassName = "h-11! w-full rounded-xl bg-background/60 px-3.5"
+
 const defaultValues: DefaultValues<CreateProgrammeActivityFormValues> = {
+  milestoneId: "",
   activity: "",
   owner: "",
+  startDate: "",
   deadline: "",
   progress: 0,
   material: "",
@@ -45,6 +72,9 @@ function OptionalLabel({ children }: { children: React.ReactNode }) {
 export function AddActivityDialog({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false)
   const createActivity = useCreateProgrammeActivity()
+  // Shares the milestones table's cached list.
+  const milestones = useMilestones(projectId)
+  const milestoneOptions = milestones.data ?? []
   const {
     control,
     register,
@@ -55,6 +85,14 @@ export function AddActivityDialog({ projectId }: { projectId: string }) {
     resolver: zodResolver(createProgrammeActivitySchema),
     defaultValues,
   })
+  // The deadline picker can't go earlier than the start date.
+  const startDate = useWatch({ control, name: "startDate" })
+
+  let milestonePlaceholder = "Choose a milestone"
+  if (milestones.isPending) milestonePlaceholder = "Loading milestones…"
+  else if (milestones.isError) milestonePlaceholder = "Couldn't load milestones"
+  else if (milestoneOptions.length === 0)
+    milestonePlaceholder = "No milestones yet"
 
   // Every opening starts with an empty form and no leftover error.
   function handleOpenChange(nextOpen: boolean) {
@@ -99,17 +137,77 @@ export function AddActivityDialog({ projectId }: { projectId: string }) {
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t add the activity. Try again.
+              {getErrorMessage(
+                createActivity.error,
+                "We couldn't add the activity. Try again."
+              )}
             </p>
           )}
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Field data-invalid={!!errors.milestoneId}>
+              <FieldLabel htmlFor="activity-milestone">Milestone</FieldLabel>
+              <Controller
+                control={control}
+                name="milestoneId"
+                render={({ field }) => (
+                  <Select
+                    name={field.name}
+                    // "" shows the placeholder again after the form resets.
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    disabled={milestoneOptions.length === 0}
+                  >
+                    <SelectTrigger
+                      id="activity-milestone"
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      aria-invalid={!!errors.milestoneId}
+                      className={selectTriggerClassName}
+                    >
+                      <SelectValue placeholder={milestonePlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {milestoneOptions.map((milestone) => (
+                        <SelectItem key={milestone.id} value={milestone.id}>
+                          {milestone.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {milestones.isSuccess && milestoneOptions.length === 0 && (
+                <FieldDescription>
+                  Add a milestone first. Every activity counts towards one.
+                </FieldDescription>
+              )}
+              <FieldError>{errors.milestoneId?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.progress}>
+              <FieldLabel htmlFor="activity-progress">Progress (%)</FieldLabel>
+              <Input
+                id="activity-progress"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                step={1}
+                aria-invalid={!!errors.progress}
+                className={authInputClassName}
+                {...register("progress", { valueAsNumber: true })}
+              />
+              <FieldError>{errors.progress?.message}</FieldError>
+            </Field>
+
             <Field data-invalid={!!errors.activity}>
               <FieldLabel htmlFor="activity-name">Activity</FieldLabel>
               <Input
                 id="activity-name"
                 autoComplete="off"
                 placeholder="e.g. Column formwork"
+                maxLength={activityMaxLength}
                 aria-invalid={!!errors.activity}
                 className={authInputClassName}
                 {...register("activity")}
@@ -130,6 +228,27 @@ export function AddActivityDialog({ projectId }: { projectId: string }) {
               <FieldError>{errors.owner?.message}</FieldError>
             </Field>
 
+            <Field data-invalid={!!errors.startDate}>
+              <FieldLabel htmlFor="activity-start-date">Start date</FieldLabel>
+              <Controller
+                control={control}
+                name="startDate"
+                render={({ field }) => (
+                  <DatePicker
+                    id="activity-start-date"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    placeholder="Choose the start date"
+                    aria-invalid={!!errors.startDate}
+                  />
+                )}
+              />
+              <FieldError>{errors.startDate?.message}</FieldError>
+            </Field>
+
             <Field data-invalid={!!errors.deadline}>
               <FieldLabel htmlFor="activity-deadline">Deadline</FieldLabel>
               <Controller
@@ -143,28 +262,13 @@ export function AddActivityDialog({ projectId }: { projectId: string }) {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
+                    minDate={startDate ? parseISO(startDate) : undefined}
                     placeholder="Choose the deadline"
                     aria-invalid={!!errors.deadline}
                   />
                 )}
               />
               <FieldError>{errors.deadline?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.progress}>
-              <FieldLabel htmlFor="activity-progress">Progress (%)</FieldLabel>
-              <Input
-                id="activity-progress"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={100}
-                step={1}
-                aria-invalid={!!errors.progress}
-                className={authInputClassName}
-                {...register("progress", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.progress?.message}</FieldError>
             </Field>
 
             <Field data-invalid={!!errors.material}>

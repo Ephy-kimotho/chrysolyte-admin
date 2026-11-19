@@ -4,15 +4,12 @@ import { milestonesQueryKey } from "@/hooks/use-milestones"
 import { projectsQueryKey } from "@/hooks/use-projects"
 import * as programmeApi from "@/lib/api/programme"
 import { notifyError, notifySuccess } from "@/lib/notify"
-import type {
-  Milestone,
-  MilestoneProgressFormValues,
-} from "@/lib/types/programme"
+import type { Milestone, ProgressUpdateFormValues } from "@/lib/types/programme"
 
 interface UpdateMilestoneProgressOptions {
   /** The milestone as saved; the API needs its other details too. */
   milestone: Milestone
-  data: MilestoneProgressFormValues
+  data: ProgressUpdateFormValues
 }
 
 /** Sets a milestone's completion. Project progress updates to match. */

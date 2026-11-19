@@ -16,6 +16,9 @@ const percentSchema = z
 /** Longest milestone name, in characters. */
 export const milestoneNameMaxLength = 50
 
+/** Longest activity description, in characters. */
+export const activityMaxLength = 50
+
 /**
  * A new milestone. `remainingWeight` is the share of the project not yet given
  * to other milestones, so the weights never add up to more than 100%.
@@ -53,14 +56,24 @@ export function createMilestoneSchema(remainingWeight: number) {
     })
 }
 
-export const milestoneProgressSchema = z.object({
+/** An inline progress update, for a milestone or an activity. */
+export const progressUpdateSchema = z.object({
   progress: percentSchema,
 })
 
 export const createProgrammeActivitySchema = z
   .object({
-    activity: z.string().trim().min(1, "Describe the activity"),
+    milestoneId: z.string().min(1, "Choose the milestone"),
+    activity: z
+      .string()
+      .trim()
+      .min(1, "Describe the activity")
+      .max(
+        activityMaxLength,
+        `Keep it to ${activityMaxLength} characters or fewer`
+      ),
     owner: z.string().trim().min(1, "Enter who owns it"),
+    startDate: isoDateSchema("start date"),
     deadline: isoDateSchema("deadline"),
     progress: percentSchema,
     /** Optional, but needs a quantity when given. */
@@ -69,6 +82,11 @@ export const createProgrammeActivitySchema = z
       .number("Enter the forecast quantity")
       .positive("The quantity must be more than 0")
       .nullable(),
+  })
+  .refine((values) => values.deadline >= values.startDate, {
+    // ISO dates compare correctly as text.
+    message: "The deadline can't be before the start date",
+    path: ["deadline"],
   })
   .refine((values) => !values.material || values.forecastQuantity !== null, {
     message: "Enter the forecast quantity",
