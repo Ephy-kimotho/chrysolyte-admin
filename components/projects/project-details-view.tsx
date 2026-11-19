@@ -27,7 +27,7 @@ type ProjectDetailsViewProps = {
 
 export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
   const { data: project } = useProject(projectId)
-  const { data: staff } = useStaff()
+  const { data: staff = [] } = useStaff()
   const { data: financials } = useFinancials()
 
   if (!project) {

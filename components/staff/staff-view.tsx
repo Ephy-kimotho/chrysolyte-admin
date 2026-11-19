@@ -3,12 +3,14 @@
 import Link from "next/link"
 
 import { AddStaffDialog } from "@/components/staff/add-staff-dialog"
-import { RemoveStaffDialog } from "@/components/staff/remove-staff-dialog"
+import { StaffActions } from "@/components/staff/staff-actions"
 import { StaffActivity } from "@/components/staff/staff-activity"
 import { StaffKpiSummary } from "@/components/staff/staff-kpi-summary"
+import { StaffStats } from "@/components/staff/staff-stats"
 import { UserAvatar } from "@/components/user-avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -19,6 +21,7 @@ import {
 } from "@/components/ui/table"
 import { useProjects } from "@/hooks/use-projects"
 import { useStaff } from "@/hooks/use-staff"
+import { getErrorMessage } from "@/lib/api/errors"
 import type { StaffMember } from "@/lib/types/staff"
 
 const headClassName =
@@ -45,7 +48,7 @@ function StaffIdentity({ member }: { member: StaffMember }) {
           {member.fullName}
         </Link>
         <span className="text-xs text-muted-foreground tabular-nums">
-          {member.staffNumber}
+          {member.idNo}
         </span>
       </div>
     </div>
@@ -53,7 +56,7 @@ function StaffIdentity({ member }: { member: StaffMember }) {
 }
 
 export function StaffView() {
-  const { data: staff } = useStaff()
+  const staff = useStaff()
   const { data: projects } = useProjects()
 
   function assignmentName(projectId: string | null) {
@@ -79,7 +82,28 @@ export function StaffView() {
         <AddStaffDialog />
       </div>
 
-      {staff.length === 0 ? (
+      <StaffStats />
+
+      {staff.isPending ? (
+        <StaffSkeleton />
+      ) : staff.isError ? (
+        <div
+          role="alert"
+          className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-5 py-10 text-center"
+        >
+          <p className="text-sm text-destructive">
+            {getErrorMessage(staff.error, "We couldn't load the staff.")}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => staff.refetch()}
+            disabled={staff.isFetching}
+            className="h-10 rounded-full px-5"
+          >
+            {staff.isFetching ? "Retrying…" : "Try again"}
+          </Button>
+        </div>
+      ) : staff.data.length === 0 ? (
         <p className="rounded-2xl border border-dashed px-5 py-10 text-center text-sm text-muted-foreground">
           No staff yet. Add someone to start tracking their performance.
         </p>
@@ -103,13 +127,13 @@ export function StaffView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staff.map((member) => (
+                {staff.data.map((member) => (
                   <TableRow key={member.id}>
                     <TableCell className={`${cellClassName} min-w-52`}>
                       <StaffIdentity member={member} />
                     </TableCell>
                     <TableCell className={cellClassName}>
-                      <p>{member.role}</p>
+                      <p className="capitalize">{member.role}</p>
                       <p className="text-xs text-muted-foreground">
                         {member.division}
                       </p>
@@ -130,20 +154,8 @@ export function StaffView() {
                       />
                     </TableCell>
                     <TableCell className={`${cellClassName} py-2.5`}>
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="h-9 rounded-full px-4"
-                        >
-                          <Link
-                            href={profileHref(member)}
-                            aria-label={`View ${member.fullName}'s profile`}
-                          >
-                            View
-                          </Link>
-                        </Button>
-                        <RemoveStaffDialog member={member} />
+                      <div className="flex justify-end">
+                        <StaffActions member={member} showViewDetails />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -154,13 +166,13 @@ export function StaffView() {
 
           {/* Smaller screens: one card per staff member. */}
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:hidden">
-            {staff.map((member) => (
+            {staff.data.map((member) => (
               <li key={member.id}>
                 <Card className="h-full gap-4 rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-3">
                     <StaffIdentity member={member} />
                     <div className="-mt-1 -mr-1 shrink-0">
-                      <RemoveStaffDialog member={member} />
+                      <StaffActions member={member} showViewDetails />
                     </div>
                   </div>
 
@@ -218,5 +230,63 @@ export function StaffView() {
         </>
       )}
     </section>
+  )
+}
+
+const skeletonRows = [0, 1, 2, 3]
+
+function StaffSkeleton() {
+  return (
+    <div aria-busy="true" className="flex flex-col gap-3">
+      <p role="status" className="sr-only">
+        Loading staff…
+      </p>
+
+      <Card className="hidden gap-0 rounded-2xl px-5 py-2 lg:flex">
+        {skeletonRows.map((row) => (
+          <div
+            key={row}
+            className="flex items-center gap-6 border-b py-4 last:border-b-0"
+          >
+            <div className="flex items-center gap-3">
+              <Skeleton className="size-10 rounded-full" />
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="ml-auto h-9 w-20 rounded-full" />
+          </div>
+        ))}
+      </Card>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:hidden">
+        {skeletonRows.map((row) => (
+          <Card key={row} className="gap-4 rounded-2xl p-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="size-10 rounded-full" />
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <Skeleton className="h-10 w-full rounded-full" />
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }

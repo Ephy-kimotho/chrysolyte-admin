@@ -37,7 +37,7 @@ function EmptyRow({
 }
 
 export function ProjectSiteStaffTab({ projectId }: { projectId: string }) {
-  const { data: staff } = useStaff()
+  const { data: staff = [] } = useStaff()
   const { data: wages } = useProjectWages(projectId)
   const personnel = staff.filter((member) => member.projectId === projectId)
 
@@ -76,9 +76,13 @@ export function ProjectSiteStaffTab({ projectId }: { projectId: string }) {
                     {formatCurrency(member.dailyRate)}
                   </TableCell>
                   <TableCell className={`${tableCellClassName} tabular-nums`}>
-                    <time dateTime={member.lastActiveOn}>
-                      {member.lastActiveOn}
-                    </time>
+                    {member.lastActiveOn === null ? (
+                      "—"
+                    ) : (
+                      <time dateTime={member.lastActiveOn}>
+                        {member.lastActiveOn}
+                      </time>
+                    )}
                   </TableCell>
                   <TableCell className={`${tableCellClassName} tabular-nums`}>
                     {member.kpiEfficiency === null

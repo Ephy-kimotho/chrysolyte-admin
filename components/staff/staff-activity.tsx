@@ -8,6 +8,10 @@ export function StaffActivity({
   lastActiveOn,
   daysSinceActive,
 }: StaffActivityProps) {
+  if (lastActiveOn === null || daysSinceActive === null) {
+    return <span className="text-muted-foreground">No activity yet</span>
+  }
+
   const isInactive = daysSinceActive > inactiveAfterDays
 
   return (

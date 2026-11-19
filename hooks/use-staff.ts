@@ -1,15 +1,23 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 
-import * as staffApi from "@/lib/mock/staff"
+import * as staffApi from "@/lib/api/staff"
+import type { StaffFilters } from "@/lib/types/staff"
 
 export const staffQueryKey = ["staff"] as const
 
-/** Lists every staff member with their KPIs and activity. */
-export function useStaff() {
+/** The query for a staff list; shared so other hooks can read the same cache. */
+export function staffQueryOptions(filters: StaffFilters = {}) {
+  return {
+    queryKey: [...staffQueryKey, filters],
+    queryFn: () => staffApi.listStaff(filters),
+  }
+}
+
+/** Lists staff, optionally filtered by division or to active staff only. */
+export function useStaff(filters: StaffFilters = {}) {
   return useQuery({
-    queryKey: staffQueryKey,
-    queryFn: staffApi.listStaff,
-    // The mock data is in memory, so render it straight away without a loading state.
-    initialData: staffApi.getStaffSnapshot,
+    ...staffQueryOptions(filters),
+    // Keep showing the last list while a new filter loads.
+    placeholderData: keepPreviousData,
   })
 }
