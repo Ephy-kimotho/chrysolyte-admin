@@ -10,7 +10,7 @@ type MockStaffMember = {
   dailyRate: number
 }
 
-let staff: MockStaffMember[] = [
+const staff: MockStaffMember[] = [
   { id: "peter-mwangi", fullName: "Peter Mwangi", dailyRate: 2500 },
   { id: "james-kamau", fullName: "James Kamau", dailyRate: 2200 },
   { id: "faith-njeri", fullName: "Faith Njeri", dailyRate: 4500 },
@@ -20,10 +20,4 @@ let staff: MockStaffMember[] = [
 
 export function getStaffSnapshot() {
   return staff
-}
-
-// There's no delete endpoint yet. This stands in so the Staff & KPI delete
-// action works end to end; it doesn't change the real staff record.
-export async function deleteStaffMember(staffId: string) {
-  staff = staff.filter((item) => item.id !== staffId)
 }

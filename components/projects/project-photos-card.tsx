@@ -1,152 +1,132 @@
 "use client"
 
-import { useState } from "react"
 import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 
+import { DeleteProjectPhotoDialog } from "@/components/projects/delete-project-photo-dialog"
 import { ImageUpload } from "@/components/image-upload"
 import { TableCard } from "@/components/table-card"
 import { Button } from "@/components/ui/button"
-import { FieldError } from "@/components/ui/field"
-import { useAddProjectPhotos } from "@/hooks/use-add-project-photos"
-import {
-  addProjectPhotosSchema,
-  maxProjectPhotos,
-} from "@/lib/schemas/projects"
-import type { AddProjectPhotosFormValues, Project } from "@/lib/types/projects"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { useUploadProjectPhoto } from "@/hooks/use-upload-project-photo"
+import { getErrorMessage } from "@/lib/api/errors"
+import { uploadProjectPhotoSchema } from "@/lib/schemas/projects"
+import type {
+  Project,
+  UploadProjectPhotoFormInput,
+  UploadProjectPhotoFormValues,
+} from "@/lib/types/projects"
 
-const defaultValues: AddProjectPhotosFormValues = { photos: [] }
+const defaultValues: UploadProjectPhotoFormInput = { photo: null }
 
 type ProjectPhotosCardProps = {
-  project: Pick<Project, "id" | "name" | "photoUrls">
+  project: Pick<Project, "id" | "name" | "coverImageUrl">
 }
 
+/** The project's photo, filling the card, or a picker to upload one. */
 export function ProjectPhotosCard({ project }: ProjectPhotosCardProps) {
-  const hasPhotos = project.photoUrls.length > 0
-  const remaining = maxProjectPhotos - project.photoUrls.length
-  // With no photos the uploader shows straight away; otherwise on request.
-  const [isAdding, setIsAdding] = useState(false)
-  const showUploader = (!hasPhotos || isAdding) && remaining > 0
+  if (!project.coverImageUrl)
+    return <UploadProjectPhotoCard project={project} />
 
-  const addPhotos = useAddProjectPhotos()
+  return (
+    <section
+      aria-labelledby="project-photo-heading"
+      className="relative aspect-4/3 overflow-hidden rounded-2xl bg-muted ring-1 ring-foreground/10"
+    >
+      <h2 id="project-photo-heading" className="sr-only">
+        Photo
+      </h2>
+      <Image
+        src={project.coverImageUrl}
+        alt={`Photo of ${project.name}`}
+        fill
+        unoptimized
+        className="object-cover"
+      />
+      <DeleteProjectPhotoDialog
+        projectId={project.id}
+        projectName={project.name}
+        className="absolute top-3 right-3"
+      />
+    </section>
+  )
+}
+
+function UploadProjectPhotoCard({ project }: ProjectPhotosCardProps) {
+  const uploadPhoto = useUploadProjectPhoto()
   const {
     control,
     handleSubmit,
-    reset,
     formState: { errors },
-  } = useForm<AddProjectPhotosFormValues>({
-    resolver: zodResolver(addProjectPhotosSchema),
+  } = useForm<
+    UploadProjectPhotoFormInput,
+    unknown,
+    UploadProjectPhotoFormValues
+  >({
+    resolver: zodResolver(uploadProjectPhotoSchema),
     defaultValues,
   })
 
-  function closeUploader() {
-    reset(defaultValues)
-    addPhotos.reset()
-    setIsAdding(false)
-  }
-
-  function onSubmit(data: AddProjectPhotosFormValues) {
-    addPhotos.mutate({ id: project.id, data }, { onSuccess: closeUploader })
+  // Once the upload lands, the photo replaces this card, so a later delete
+  // brings back a fresh, empty picker.
+  function onSubmit(data: UploadProjectPhotoFormValues) {
+    uploadPhoto.mutate({ projectId: project.id, name: project.name, data })
   }
 
   return (
     <TableCard
-      titleId="project-photos-heading"
+      titleId="project-photo-heading"
       title="Photo"
       titleClassName="pt-2 text-lg"
-      action={
-        hasPhotos &&
-        !isAdding &&
-        remaining > 0 && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsAdding(true)}
-            className="mt-2 h-9 rounded-xl px-3"
-          >
-            <Plus aria-hidden="true" />
-            Add photos
-          </Button>
-        )
-      }
     >
-      {hasPhotos && (
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3">
-          {project.photoUrls.map((url, index) => (
-            <li
-              key={url}
-              className="relative aspect-4/3 overflow-hidden rounded-xl bg-muted"
-            >
-              <Image
-                src={url}
-                alt={`${project.name} site photo ${index + 1}`}
-                fill
-                unoptimized
-                className="object-cover"
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        className="flex flex-col gap-3"
+      >
+        {uploadPhoto.isError && (
+          <p
+            role="alert"
+            className="rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
+          >
+            {getErrorMessage(
+              uploadPhoto.error,
+              "We couldn't upload the photo. Try again."
+            )}
+          </p>
+        )}
 
-      {showUploader && (
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="flex flex-col gap-3"
-        >
-          {addPhotos.isError && (
-            <p
-              role="alert"
-              className="rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
-            >
-              We couldn&apos;t upload the photos. Try again.
-            </p>
-          )}
-
+        <Field data-invalid={!!errors.photo}>
+          <FieldLabel htmlFor="project-photo-upload" className="sr-only">
+            Project photo
+          </FieldLabel>
           <Controller
             control={control}
-            name="photos"
+            name="photo"
             render={({ field }) => (
               <ImageUpload
-                multiple
-                id="project-photos"
+                id="project-photo-upload"
                 ref={field.ref}
-                maxFiles={remaining}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                disabled={addPhotos.isPending}
-                aria-invalid={!!errors.photos}
+                disabled={uploadPhoto.isPending}
+                aria-invalid={!!errors.photo}
               />
             )}
           />
-          <FieldError>{errors.photos?.message}</FieldError>
+          <FieldError>{errors.photo?.message}</FieldError>
+        </Field>
 
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            {hasPhotos && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={closeUploader}
-                disabled={addPhotos.isPending}
-                className="h-10 rounded-full px-5"
-              >
-                Cancel
-              </Button>
-            )}
-            <Button
-              type="submit"
-              disabled={addPhotos.isPending}
-              className="h-10 rounded-full px-5"
-            >
-              {addPhotos.isPending ? "Uploading…" : "Upload photos"}
-            </Button>
-          </div>
-        </form>
-      )}
+        <Button
+          type="submit"
+          disabled={uploadPhoto.isPending}
+          className="h-10 rounded-full px-5 sm:self-end"
+        >
+          {uploadPhoto.isPending ? "Uploading…" : "Upload photo"}
+        </Button>
+      </form>
     </TableCard>
   )
 }

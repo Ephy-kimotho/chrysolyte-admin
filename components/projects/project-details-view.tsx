@@ -1,5 +1,8 @@
 "use client"
 
+import Link from "next/link"
+import { ChevronLeft } from "lucide-react"
+
 import { ProjectInstructionsTab } from "@/components/projects/project-instructions-tab"
 import { ProjectSiteStaffTab } from "@/components/projects/project-site-staff-tab"
 import { ProjectStoreTab } from "@/components/projects/project-store-tab"
@@ -7,10 +10,14 @@ import { ProjectProgrammeTab } from "@/components/projects/programme/project-pro
 import { ProjectPhotosCard } from "@/components/projects/project-photos-card"
 import { ProjectProfileCard } from "@/components/projects/project-profile-card"
 import { StatCard } from "@/components/dashboard/stat-card"
+import { LoadError } from "@/components/load-error"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFinancials } from "@/hooks/use-financials"
 import { useProject } from "@/hooks/use-project"
 import { useStaff } from "@/hooks/use-staff"
+import { useStaffNames } from "@/hooks/use-staff-names"
 import { formatCurrency } from "@/lib/format"
 
 const sections = [
@@ -26,9 +33,43 @@ type ProjectDetailsViewProps = {
 }
 
 export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
-  const { data: project } = useProject(projectId)
+  // The link shows in every state, so there's always a way back.
+  return (
+    <div className="flex flex-col gap-3">
+      <Button
+        asChild
+        variant="ghost"
+        className="-ml-2 h-9 w-fit rounded-full px-3 text-muted-foreground"
+      >
+        <Link href="/projects">
+          <ChevronLeft aria-hidden="true" />
+          All projects
+        </Link>
+      </Button>
+      <ProjectDetails projectId={projectId} />
+    </div>
+  )
+}
+
+function ProjectDetails({ projectId }: ProjectDetailsViewProps) {
+  const projectQuery = useProject(projectId)
   const { data: staff = [] } = useStaff()
+  const staffNames = useStaffNames()
   const { data: financials } = useFinancials()
+  const project = projectQuery.data
+
+  if (projectQuery.isPending) return <ProjectDetailsSkeleton />
+
+  if (projectQuery.isError) {
+    return (
+      <LoadError
+        error={projectQuery.error}
+        fallback="We couldn't load this project."
+        onRetry={() => projectQuery.refetch()}
+        isRetrying={projectQuery.isFetching}
+      />
+    )
+  }
 
   if (!project) {
     return (
@@ -48,7 +89,9 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
     project.phase,
     project.contractType,
     project.location,
-    project.manager && `Manager: ${project.manager}`,
+    project.leadConsultantId &&
+      staffNames.has(project.leadConsultantId) &&
+      `Manager: ${staffNames.get(project.leadConsultantId)}`,
   ].filter(Boolean)
 
   return (
@@ -133,6 +176,27 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
           <ProjectStoreTab project={project} />
         </TabsContent>
       </Tabs>
+    </div>
+  )
+}
+
+function ProjectDetailsSkeleton() {
+  return (
+    <div aria-busy="true" className="flex flex-col gap-4">
+      <p role="status" className="sr-only">
+        Loading project…
+      </p>
+      <div className="flex flex-col gap-3 rounded-2xl bg-muted px-5 py-6 sm:px-6 sm:pb-10">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-8 w-64 max-w-full" />
+        <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((card) => (
+          <Skeleton key={card} className="h-24 rounded-2xl" />
+        ))}
+      </div>
+      <Skeleton className="h-64 rounded-2xl" />
     </div>
   )
 }

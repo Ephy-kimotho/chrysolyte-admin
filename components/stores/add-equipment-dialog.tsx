@@ -51,7 +51,7 @@ const defaultValues: DefaultValues<CreateEquipmentFormValues> = {
 export function AddEquipmentDialog() {
   const [open, setOpen] = useState(false)
   const createEquipment = useCreateEquipment()
-  const { data: projects } = useProjects()
+  const { data: projects = [] } = useProjects()
   const {
     control,
     register,

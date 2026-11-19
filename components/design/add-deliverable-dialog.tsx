@@ -44,7 +44,7 @@ const defaultValues: DefaultValues<CreateDesignDeliverableFormValues> = {
 export function AddDeliverableDialog() {
   const [open, setOpen] = useState(false)
   const createDeliverable = useCreateDesignDeliverable()
-  const { data: projects } = useProjects()
+  const { data: projects = [] } = useProjects()
   const {
     control,
     register,

@@ -12,7 +12,7 @@ import type {
 } from "@/lib/types/programme"
 
 type MilestoneProgressInputProps = {
-  milestone: Pick<Milestone, "id" | "name" | "progress">
+  milestone: Milestone
 }
 
 /**
@@ -26,6 +26,7 @@ export function MilestoneProgressInput({
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<MilestoneProgressFormValues>({
     resolver: zodResolver(milestoneProgressSchema),
@@ -36,7 +37,11 @@ export function MilestoneProgressInput({
 
   function onSubmit(data: MilestoneProgressFormValues) {
     if (data.progress === milestone.progress) return
-    updateProgress.mutate({ id: milestone.id, data })
+    updateProgress.mutate(
+      { milestone, data },
+      // Shows the saved value again; the toast says what went wrong.
+      { onError: () => reset({ progress: milestone.progress }) }
+    )
   }
 
   const save = handleSubmit(onSubmit)
@@ -50,6 +55,9 @@ export function MilestoneProgressInput({
         max={100}
         step={1}
         aria-label={`${milestone.name} progress (%)`}
+        // Read-only rather than disabled, so saving with Enter keeps focus here.
+        readOnly={updateProgress.isPending}
+        aria-busy={updateProgress.isPending}
         aria-invalid={!!errors.progress}
         aria-describedby={errors.progress ? errorId : undefined}
         className="h-8 w-20 rounded-lg bg-background/60 px-2.5 tabular-nums md:text-sm"

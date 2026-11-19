@@ -57,7 +57,7 @@ function StaffIdentity({ member }: { member: StaffMember }) {
 
 export function StaffView() {
   const staff = useStaff()
-  const { data: projects } = useProjects()
+  const { data: projects = [] } = useProjects()
 
   function assignmentName(projectId: string | null) {
     const project = projects.find((item) => item.id === projectId)

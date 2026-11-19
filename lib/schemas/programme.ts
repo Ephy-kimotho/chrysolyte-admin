@@ -13,6 +13,9 @@ const percentSchema = z
   .min(0, "It can't be below 0%")
   .max(100, "It can't be above 100%")
 
+/** Longest milestone name, in characters. */
+export const milestoneNameMaxLength = 50
+
 /**
  * A new milestone. `remainingWeight` is the share of the project not yet given
  * to other milestones, so the weights never add up to more than 100%.
@@ -20,7 +23,14 @@ const percentSchema = z
 export function createMilestoneSchema(remainingWeight: number) {
   return z
     .object({
-      name: z.string().trim().min(1, "Enter the milestone"),
+      name: z
+        .string()
+        .trim()
+        .min(1, "Enter the milestone")
+        .max(
+          milestoneNameMaxLength,
+          `Keep it to ${milestoneNameMaxLength} characters or fewer`
+        ),
       owner: z.string().trim().min(1, "Enter who owns it"),
       weight: z
         .number("Enter the weight as a percentage")

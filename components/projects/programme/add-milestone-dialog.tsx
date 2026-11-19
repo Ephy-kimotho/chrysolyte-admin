@@ -32,7 +32,11 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useCreateMilestone } from "@/hooks/use-create-milestone"
-import { createMilestoneSchema } from "@/lib/schemas/programme"
+import { getErrorMessage } from "@/lib/api/errors"
+import {
+  createMilestoneSchema,
+  milestoneNameMaxLength,
+} from "@/lib/schemas/programme"
 import type { CreateMilestoneFormValues } from "@/lib/types/programme"
 
 const defaultValues: DefaultValues<CreateMilestoneFormValues> = {
@@ -115,7 +119,10 @@ export function AddMilestoneDialog({
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t add the milestone. Try again.
+              {getErrorMessage(
+                createMilestone.error,
+                "We couldn't add the milestone. Try again."
+              )}
             </p>
           )}
 
@@ -126,6 +133,7 @@ export function AddMilestoneDialog({
                 id="milestone-name"
                 autoComplete="off"
                 placeholder="e.g. Substructure"
+                maxLength={milestoneNameMaxLength}
                 aria-invalid={!!errors.name}
                 className={authInputClassName}
                 {...register("name")}

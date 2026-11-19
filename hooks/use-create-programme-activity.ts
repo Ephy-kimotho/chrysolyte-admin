@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { programmeQueryKey } from "@/hooks/use-project-programme"
+import { programmeActivitiesQueryKey } from "@/hooks/use-programme-activities"
 import * as programmeApi from "@/lib/mock/programme"
 import type { CreateProgrammeActivityFormValues } from "@/lib/types/programme"
 
@@ -17,6 +17,8 @@ export function useCreateProgrammeActivity() {
     mutationFn: ({ projectId, data }: CreateProgrammeActivityOptions) =>
       programmeApi.createProgrammeActivity(projectId, data),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: programmeQueryKey }),
+      queryClient.invalidateQueries({
+        queryKey: programmeActivitiesQueryKey,
+      }),
   })
 }

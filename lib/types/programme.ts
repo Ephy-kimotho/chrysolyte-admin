@@ -36,14 +36,40 @@ export type ProgrammeActivity = {
   forecastQuantity: number | null
 }
 
-export type ProjectProgramme = {
-  milestones: Milestone[]
-  activities: ProgrammeActivity[]
+/** A milestone as `GET /projects/projects/{project_id}/milestones` returns it. */
+export type MilestoneResponse = {
+  milestone_id: string
+  project_id: string
+  name: string
+  weight: number
+  progress: number
+  /** ISO date (yyyy-MM-dd). */
+  start_date: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+  owner: string
 }
 
 export type CreateMilestoneFormValues = z.infer<
   ReturnType<typeof createMilestoneSchema>
 >
+
+/**
+ * Request body for `POST /projects/projects/{project_id}/milestones`, and for
+ * `PATCH /projects/milestones/{milestone_id}`.
+ */
+export type CreateMilestonePayload = {
+  name: string
+  /** Share of the project, 1–100. */
+  weight: number
+  /** Completion percentage, 0–100. */
+  progress: number
+  /** ISO date (yyyy-MM-dd). */
+  start_date: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+  owner: string
+}
 
 export type MilestoneProgressFormValues = z.infer<
   typeof milestoneProgressSchema

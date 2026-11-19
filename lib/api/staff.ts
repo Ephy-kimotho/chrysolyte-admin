@@ -208,6 +208,11 @@ export async function updateStaffMember(
   return response.data
 }
 
+/** Deletes a staff member with their skills and emergency contacts. */
+export async function deleteStaffMember(staffId: string) {
+  await axiosInstance.delete(`/people/staff/${staffId}`)
+}
+
 export async function deleteStaffPhoto(staffId: string) {
   await axiosInstance.delete(`/people/staff/${staffId}/photo`)
 }

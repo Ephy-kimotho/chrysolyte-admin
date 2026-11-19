@@ -1,16 +1,14 @@
 "use client"
 
-import { useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Camera, DraftingCompass, HardHat } from "lucide-react"
+import { DraftingCompass, HardHat } from "lucide-react"
 
 import { RemoveProjectDialog } from "@/components/projects/remove-project-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { useUpdateProjectCover } from "@/hooks/use-update-project-cover"
 import { formatDate } from "@/lib/format"
 import type { Project, ProjectPhase } from "@/lib/types/projects"
 
@@ -24,16 +22,7 @@ type ProjectCardProps = {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const updateCover = useUpdateProjectCover()
   const PhaseIcon = phaseIcons[project.phase]
-
-  function handleCoverChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    // Clear the input so choosing the same file again still fires a change.
-    event.target.value = ""
-    if (file) updateCover.mutate({ id: project.id, data: { file } })
-  }
 
   return (
     <Card className="h-full gap-0 rounded-2xl py-0">
@@ -55,27 +44,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
             />
           </div>
         )}
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-lg"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={updateCover.isPending}
-          aria-label={`Change cover photo of ${project.name}`}
-          className="absolute right-3 bottom-3 rounded-xl bg-black/40 text-foreground backdrop-blur-sm hover:bg-black/60 hover:text-foreground"
-        >
-          <Camera />
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          tabIndex={-1}
-          aria-hidden="true"
-          onChange={handleCoverChange}
-          className="sr-only"
-        />
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">

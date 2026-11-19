@@ -48,7 +48,7 @@ function getDefaultValues(): DefaultValues<CreateTransactionFormValues> {
 export function RecordTransactionDialog() {
   const [open, setOpen] = useState(false)
   const createTransaction = useCreateTransaction()
-  const { data: projects } = useProjects()
+  const { data: projects = [] } = useProjects()
   const {
     control,
     register,

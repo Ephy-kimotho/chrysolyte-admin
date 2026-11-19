@@ -1,13 +1,14 @@
 import type {
-  CreateMilestoneFormValues,
   CreateProgrammeActivityFormValues,
   Milestone,
   ProgrammeActivity,
-  ProjectProgramme,
 } from "@/lib/types/programme"
 
-// In-memory stand-in for a project programme API. Changes last until the page reloads.
-let milestones: Milestone[] = [
+// In-memory stand-in for the work programme API. The milestones list reads the
+// real API (`lib/api/programme.ts`); these mock milestones only feed the mock
+// projects' progress until the remaining mocks go. Changes last until the page
+// reloads.
+const milestones: Milestone[] = [
   {
     id: "kilimani-substructure",
     projectId: "kilimani-residence",
@@ -89,36 +90,10 @@ export function getMilestoneProgress(projectId: string) {
   return Math.round(weighted / 100)
 }
 
-export function getProjectProgrammeSnapshot(
-  projectId: string
-): ProjectProgramme {
-  return {
-    milestones: milestones
-      .filter((item) => item.projectId === projectId)
-      .sort((a, b) => a.startDate.localeCompare(b.startDate)),
-    activities: activities
-      .filter((item) => item.projectId === projectId)
-      .sort((a, b) => a.deadline.localeCompare(b.deadline)),
-  }
-}
-
-export async function getProjectProgramme(projectId: string) {
-  return getProjectProgrammeSnapshot(projectId)
-}
-
-export async function createMilestone(
-  projectId: string,
-  data: CreateMilestoneFormValues
-) {
-  const milestone: Milestone = { id: crypto.randomUUID(), projectId, ...data }
-  milestones = [...milestones, milestone]
-  return milestone
-}
-
-export async function updateMilestoneProgress(id: string, progress: number) {
-  milestones = milestones.map((item) =>
-    item.id === id ? { ...item, progress } : item
-  )
+export async function listProgrammeActivities(projectId: string) {
+  return activities
+    .filter((item) => item.projectId === projectId)
+    .sort((a, b) => a.deadline.localeCompare(b.deadline))
 }
 
 export async function createProgrammeActivity(

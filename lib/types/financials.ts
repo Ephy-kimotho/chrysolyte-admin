@@ -1,7 +1,6 @@
 import type { z } from "zod"
 
 import type { createTransactionSchema } from "@/lib/schemas/financials"
-import type { ContractType } from "@/lib/types/projects"
 
 export const transactionTypes = ["Client receipt", "Project cost"] as const
 
@@ -25,7 +24,8 @@ export type ProjectFinancials = {
   /** Reference code, e.g. `CEL-C-260806-001`. */
   code: string
   name: string
-  contractType: ContractType
+  /** One of `contractTypes`, unless the API sends one the app doesn't know. */
+  contractType: string
   /** Contract value. */
   budget: number
   /** Sum of client receipts. */

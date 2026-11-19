@@ -13,6 +13,9 @@ import {
 
 import { authInputClassName } from "@/components/auth/styles"
 import { DatePicker } from "@/components/date-picker"
+import { ImageUpload } from "@/components/image-upload"
+import { ClientCombobox } from "@/components/projects/client-combobox"
+import { StaffCombobox } from "@/components/projects/staff-combobox"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -32,7 +35,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { useCreateProject } from "@/hooks/use-create-project"
+import { getErrorMessage } from "@/lib/api/errors"
 import { createProjectSchema } from "@/lib/schemas/projects"
 import {
   contractTypes,
@@ -42,16 +47,24 @@ import {
 
 const selectTriggerClassName = "h-11! w-full rounded-xl bg-background/60 px-3.5"
 
+const textareaClassName =
+  "max-h-48 min-h-24 rounded-xl bg-background/60 px-3.5 py-2.5"
+
 // Division and contract type aren't preselected, so the user has to choose.
 const defaultValues: DefaultValues<CreateProjectFormValues> = {
+  coverPhoto: null,
+  projectCode: "",
   name: "",
+  clientId: "",
   client: "",
   location: "",
   startDate: "",
   dueDate: "",
-  supervisor: "",
-  projectManager: "",
-  leadConsultant: "",
+  supervisorId: "",
+  projectManagerId: "",
+  leadConsultantId: "",
+  clientNote: "",
+  internalNote: "",
 }
 
 function OptionalLabel({ children }: { children: React.ReactNode }) {
@@ -71,6 +84,7 @@ export function AddProjectDialog() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateProjectFormValues>({
     resolver: zodResolver(createProjectSchema),
@@ -78,6 +92,8 @@ export function AddProjectDialog() {
   })
   // The deadline picker can't go earlier than the start date.
   const startDate = useWatch({ control, name: "startDate" })
+  // Keeps the chosen client's name on the trigger while a search hides it.
+  const clientName = useWatch({ control, name: "client" })
 
   // Every opening starts with an empty form and no leftover error.
   function handleOpenChange(nextOpen: boolean) {
@@ -108,8 +124,8 @@ export function AddProjectDialog() {
             Add a project
           </DialogTitle>
           <DialogDescription className="leading-relaxed">
-            The project gets a reference code when you add it. Its progress
-            starts at 0% and updates automatically as work is logged.
+            Its progress starts at 0% and updates automatically as work is
+            logged.
           </DialogDescription>
         </DialogHeader>
 
@@ -119,11 +135,51 @@ export function AddProjectDialog() {
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t add the project. Try again.
+              {getErrorMessage(
+                createProject.error,
+                "We couldn't add the project. Try again."
+              )}
             </p>
           )}
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Field data-invalid={!!errors.coverPhoto} className="sm:col-span-2">
+              <FieldLabel htmlFor="project-cover-photo">
+                <OptionalLabel>Project image</OptionalLabel>
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="coverPhoto"
+                render={({ field }) => (
+                  <ImageUpload
+                    id="project-cover-photo"
+                    ref={field.ref}
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    disabled={createProject.isPending}
+                    aria-invalid={!!errors.coverPhoto}
+                  />
+                )}
+              />
+              <FieldError>{errors.coverPhoto?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.projectCode}>
+              <FieldLabel htmlFor="project-code">Project ID</FieldLabel>
+              <Input
+                id="project-code"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="CEL-C-260806-001"
+                aria-invalid={!!errors.projectCode}
+                className={authInputClassName}
+                {...register("projectCode")}
+              />
+              <FieldError>{errors.projectCode?.message}</FieldError>
+            </Field>
+
             <Field data-invalid={!!errors.name}>
               <FieldLabel htmlFor="project-name">Project name</FieldLabel>
               <Input
@@ -137,17 +193,41 @@ export function AddProjectDialog() {
               <FieldError>{errors.name?.message}</FieldError>
             </Field>
 
-            <Field data-invalid={!!errors.client}>
+            <Field data-invalid={!!errors.clientId}>
               <FieldLabel htmlFor="project-client">Client</FieldLabel>
-              <Input
-                id="project-client"
-                autoComplete="off"
-                placeholder="e.g. Jane Wanjiku or Acme Holdings Ltd"
-                aria-invalid={!!errors.client}
-                className={authInputClassName}
-                {...register("client")}
+              <Controller
+                control={control}
+                name="clientId"
+                render={({ field }) => (
+                  <ClientCombobox
+                    id="project-client"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    selectedLabel={clientName}
+                    onChange={(option) => {
+                      field.onChange(option?.value ?? "")
+                      setValue("client", option?.label ?? "")
+                    }}
+                    onBlur={field.onBlur}
+                    aria-invalid={!!errors.clientId}
+                  />
+                )}
               />
-              <FieldError>{errors.client?.message}</FieldError>
+              <FieldError>{errors.clientId?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.location}>
+              <FieldLabel htmlFor="project-location">Location</FieldLabel>
+              <Input
+                id="project-location"
+                autoComplete="off"
+                placeholder="e.g. Kilimani, Nairobi"
+                aria-invalid={!!errors.location}
+                className={authInputClassName}
+                {...register("location")}
+              />
+              <FieldError>{errors.location?.message}</FieldError>
             </Field>
 
             <Field data-invalid={!!errors.phase}>
@@ -219,35 +299,6 @@ export function AddProjectDialog() {
               <FieldError>{errors.contractType?.message}</FieldError>
             </Field>
 
-            <Field data-invalid={!!errors.location}>
-              <FieldLabel htmlFor="project-location">Location</FieldLabel>
-              <Input
-                id="project-location"
-                autoComplete="off"
-                placeholder="e.g. Kilimani, Nairobi"
-                aria-invalid={!!errors.location}
-                className={authInputClassName}
-                {...register("location")}
-              />
-              <FieldError>{errors.location?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.budget}>
-              <FieldLabel htmlFor="project-budget">Budget (KES)</FieldLabel>
-              <Input
-                id="project-budget"
-                type="number"
-                inputMode="numeric"
-                min={1}
-                step={1}
-                placeholder="e.g. 12500000"
-                aria-invalid={!!errors.budget}
-                className={authInputClassName}
-                {...register("budget", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.budget?.message}</FieldError>
-            </Field>
-
             <Field data-invalid={!!errors.startDate}>
               <FieldLabel htmlFor="project-start-date">Start date</FieldLabel>
               <Controller
@@ -291,52 +342,123 @@ export function AddProjectDialog() {
               <FieldError>{errors.dueDate?.message}</FieldError>
             </Field>
 
-            <Field data-invalid={!!errors.supervisor}>
+            <Field data-invalid={!!errors.budget}>
+              <FieldLabel htmlFor="project-budget">Budget (KES)</FieldLabel>
+              <Input
+                id="project-budget"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                placeholder="e.g. 12500000"
+                aria-invalid={!!errors.budget}
+                className={authInputClassName}
+                {...register("budget", { valueAsNumber: true })}
+              />
+              <FieldError>{errors.budget?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.supervisorId}>
               <FieldLabel htmlFor="project-supervisor">
                 <OptionalLabel>Supervisor</OptionalLabel>
               </FieldLabel>
-              <Input
-                id="project-supervisor"
-                autoComplete="off"
-                placeholder="e.g. Peter Mwangi"
-                aria-invalid={!!errors.supervisor}
-                className={authInputClassName}
-                {...register("supervisor")}
+              <Controller
+                control={control}
+                name="supervisorId"
+                render={({ field }) => (
+                  <StaffCombobox
+                    id="project-supervisor"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={(option) => field.onChange(option?.value ?? "")}
+                    onBlur={field.onBlur}
+                    placeholder="Choose a supervisor"
+                    clearable
+                    aria-invalid={!!errors.supervisorId}
+                  />
+                )}
               />
-              <FieldError>{errors.supervisor?.message}</FieldError>
+              <FieldError>{errors.supervisorId?.message}</FieldError>
             </Field>
 
-            <Field data-invalid={!!errors.projectManager}>
+            <Field data-invalid={!!errors.projectManagerId}>
               <FieldLabel htmlFor="project-manager">
                 <OptionalLabel>Project manager</OptionalLabel>
               </FieldLabel>
-              <Input
-                id="project-manager"
-                autoComplete="off"
-                placeholder="e.g. James Kamau"
-                aria-invalid={!!errors.projectManager}
-                className={authInputClassName}
-                {...register("projectManager")}
+              <Controller
+                control={control}
+                name="projectManagerId"
+                render={({ field }) => (
+                  <StaffCombobox
+                    id="project-manager"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={(option) => field.onChange(option?.value ?? "")}
+                    onBlur={field.onBlur}
+                    placeholder="Choose a project manager"
+                    clearable
+                    aria-invalid={!!errors.projectManagerId}
+                  />
+                )}
               />
-              <FieldError>{errors.projectManager?.message}</FieldError>
+              <FieldError>{errors.projectManagerId?.message}</FieldError>
             </Field>
 
-            <Field
-              data-invalid={!!errors.leadConsultant}
-              className="sm:col-span-2"
-            >
+            <Field data-invalid={!!errors.leadConsultantId}>
               <FieldLabel htmlFor="project-lead-consultant">
                 <OptionalLabel>Lead consultant</OptionalLabel>
               </FieldLabel>
-              <Input
-                id="project-lead-consultant"
-                autoComplete="off"
-                placeholder="e.g. Eng. Njoroge"
-                aria-invalid={!!errors.leadConsultant}
-                className={authInputClassName}
-                {...register("leadConsultant")}
+              <Controller
+                control={control}
+                name="leadConsultantId"
+                render={({ field }) => (
+                  <StaffCombobox
+                    id="project-lead-consultant"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={(option) => field.onChange(option?.value ?? "")}
+                    onBlur={field.onBlur}
+                    placeholder="Choose a lead consultant"
+                    clearable
+                    aria-invalid={!!errors.leadConsultantId}
+                  />
+                )}
               />
-              <FieldError>{errors.leadConsultant?.message}</FieldError>
+              <FieldError>{errors.leadConsultantId?.message}</FieldError>
+            </Field>
+
+            <Field data-invalid={!!errors.clientNote} className="sm:col-span-2">
+              <FieldLabel htmlFor="project-client-note">
+                <OptionalLabel>Note for the client</OptionalLabel>
+              </FieldLabel>
+              <Textarea
+                id="project-client-note"
+                placeholder="Anything the client should know about the project"
+                aria-invalid={!!errors.clientNote}
+                className={textareaClassName}
+                {...register("clientNote")}
+              />
+              <FieldError>{errors.clientNote?.message}</FieldError>
+            </Field>
+
+            <Field
+              data-invalid={!!errors.internalNote}
+              className="sm:col-span-2"
+            >
+              <FieldLabel htmlFor="project-internal-note">
+                <OptionalLabel>Internal note</OptionalLabel>
+              </FieldLabel>
+              <Textarea
+                id="project-internal-note"
+                placeholder="Only staff see this, e.g. something to confirm before work starts"
+                aria-invalid={!!errors.internalNote}
+                className={textareaClassName}
+                {...register("internalNote")}
+              />
+              <FieldError>{errors.internalNote?.message}</FieldError>
             </Field>
           </div>
 

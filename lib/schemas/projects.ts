@@ -1,7 +1,7 @@
 import { isValid, parseISO } from "date-fns"
 import { z } from "zod"
 
-import { imageFilesSchema } from "@/lib/schemas/files"
+import { imageFileSchema } from "@/lib/schemas/files"
 import { contractTypes, projectPhases } from "@/lib/types/projects"
 
 const isoDateSchema = (requiredMessage: string) =>
@@ -12,8 +12,17 @@ const isoDateSchema = (requiredMessage: string) =>
 
 export const createProjectSchema = z
   .object({
+    /**
+     * Optional; the division placeholder shows until a cover is added. It
+     * isn't part of the create request; it uploads once the project exists.
+     */
+    coverPhoto: imageFileSchema.nullable(),
+    /** Reference code, e.g. `CEL-C-260806-001`. */
+    projectCode: z.string().trim().toUpperCase().min(1, "Enter the project ID"),
     name: z.string().trim().min(1, "Enter the project name"),
-    client: z.string().trim().min(1, "Enter the client's name"),
+    clientId: z.string().min(1, "Choose the client"),
+    /** The chosen client's name; the API takes it alongside the ID. */
+    client: z.string(),
     phase: z.enum(projectPhases, "Choose the division"),
     contractType: z.enum(contractTypes, "Choose the contract type"),
     location: z.string().trim().min(1, "Enter the project location"),
@@ -23,10 +32,12 @@ export const createProjectSchema = z
       .positive("The budget must be more than 0"),
     startDate: isoDateSchema("Choose the start date"),
     dueDate: isoDateSchema("Choose the deadline"),
-    /** Optional: left empty until someone is appointed. */
-    supervisor: z.string().trim(),
-    projectManager: z.string().trim(),
-    leadConsultant: z.string().trim(),
+    /** Optional staff IDs: left empty until someone is appointed. */
+    supervisorId: z.string(),
+    projectManagerId: z.string(),
+    leadConsultantId: z.string(),
+    clientNote: z.string().trim(),
+    internalNote: z.string().trim(),
   })
   .refine((values) => values.dueDate >= values.startDate, {
     // ISO dates compare correctly as text.
@@ -34,12 +45,9 @@ export const createProjectSchema = z
     path: ["dueDate"],
   })
 
-/** Most site photos a project can hold. */
-export const maxProjectPhotos = 20
-
-export const addProjectPhotosSchema = z.object({
-  photos: imageFilesSchema(maxProjectPhotos).min(
-    1,
-    "Choose at least one photo"
-  ),
+export const uploadProjectPhotoSchema = z.object({
+  // Null until a photo is chosen, so the field can start empty.
+  photo: imageFileSchema
+    .nullable()
+    .refine((photo) => photo !== null, "Choose a photo to upload"),
 })

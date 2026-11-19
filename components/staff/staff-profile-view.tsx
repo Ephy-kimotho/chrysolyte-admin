@@ -279,7 +279,7 @@ type StaffProfileViewProps = {
 export function StaffProfileView({ staffId }: StaffProfileViewProps) {
   const router = useRouter()
   const profile = useStaffProfile(staffId)
-  const { data: projects } = useProjects()
+  const { data: projects = [] } = useProjects()
 
   if (profile.isPending) {
     return (

@@ -71,7 +71,7 @@ export function AddSiteInstructionDialog({
 }: AddSiteInstructionDialogProps) {
   const [open, setOpen] = useState(false)
   const createSiteInstruction = useCreateSiteInstruction()
-  const { data: projects } = useProjects()
+  const { data: projects = [] } = useProjects()
   // Only active staff can be made responsible for new work.
   const { data: staff = [] } = useStaff({ activeOnly: true })
   const {

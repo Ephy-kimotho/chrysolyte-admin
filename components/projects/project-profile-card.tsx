@@ -1,4 +1,7 @@
+"use client"
+
 import { TableCard } from "@/components/table-card"
+import { useStaffNames } from "@/hooks/use-staff-names"
 import type { Project } from "@/lib/types/projects"
 
 type ProjectProfileCardProps = {
@@ -6,10 +9,13 @@ type ProjectProfileCardProps = {
 }
 
 export function ProjectProfileCard({ project }: ProjectProfileCardProps) {
+  const staffNames = useStaffNames()
+  const staffName = (id: string | null) => (id ? staffNames.get(id) : null)
+
   const details = [
     { label: "Client", value: project.client },
-    { label: "Supervisor", value: project.supervisor },
-    { label: "Project Manager", value: project.projectManager },
+    { label: "Supervisor", value: staffName(project.supervisorId) },
+    { label: "Project Manager", value: staffName(project.projectManagerId) },
     { label: "Start", value: project.startDate },
     { label: "Deadline", value: project.dueDate },
   ]
