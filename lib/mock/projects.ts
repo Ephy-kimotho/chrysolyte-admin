@@ -3,8 +3,8 @@ import type { Project } from "@/lib/types/projects"
 
 // In-memory projects that the mocks still standing in for other APIs (design,
 // stores, financials, consultants) refer to by id. The project pages read the
-// real API (`lib/api/projects.ts`). Changes last until the page reloads.
-let projects: Project[] = [
+// real API (`lib/api/projects.ts`).
+const projects: Project[] = [
   {
     id: "kilimani-residence",
     code: "CEL-C-260806-001",
@@ -58,10 +58,4 @@ function withProgress(project: Project): Project {
 /** The current mock projects, synchronously. */
 export function getProjectsSnapshot() {
   return projects.map(withProgress)
-}
-
-export async function removeProject(id: string) {
-  const project = projects.find((item) => item.id === id)
-  if (project?.coverImageUrl) URL.revokeObjectURL(project.coverImageUrl)
-  projects = projects.filter((item) => item.id !== id)
 }

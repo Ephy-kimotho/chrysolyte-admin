@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 
-import { ProjectInstructionsTab } from "@/components/projects/project-instructions-tab"
+import { ProjectInstructionsTable } from "@/components/projects/project-instructions-table"
 import { ProjectSiteStaffTab } from "@/components/projects/project-site-staff-tab"
 import { ProjectStoreTab } from "@/components/projects/project-store-tab"
 import { ProjectProgrammeTab } from "@/components/projects/programme/project-programme-tab"
@@ -169,7 +169,7 @@ function ProjectDetails({ projectId }: ProjectDetailsViewProps) {
         </TabsContent>
 
         <TabsContent value="instructions">
-          <ProjectInstructionsTab projectId={project.id} />
+          <ProjectInstructionsTable projectId={project.id} />
         </TabsContent>
 
         <TabsContent value="store">

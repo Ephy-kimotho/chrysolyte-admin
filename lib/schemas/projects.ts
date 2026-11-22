@@ -56,21 +56,46 @@ export const uploadProjectPhotoSchema = z.object({
     .refine((photo) => photo !== null, "Choose a photo to upload"),
 })
 
-export const createProjectInstructionSchema = z
-  .object({
-    issueDate: isoDateSchema("Choose the date issued").refine(
+/**
+ * The fields both instruction forms hold. Only the update form shows
+ * `response`, and it can't change `issueDate`, which only bounds the deadline.
+ */
+const projectInstructionFieldsSchema = z.object({
+  issueDate: isoDateSchema("Choose the date issued"),
+  discipline: z.enum(instructionDisciplines, "Choose the discipline"),
+  instruction: z.string().trim().min(1, "Write the instruction"),
+  responsibleId: z
+    .string("Choose who is responsible")
+    .min(1, "Choose who is responsible"),
+  deadline: isoDateSchema("Choose the deadline"),
+  response: z.string().trim(),
+})
+
+type ProjectInstructionFields = z.infer<typeof projectInstructionFieldsSchema>
+
+/** The deadline can't come before the date issued. */
+function deadlineNotBeforeIssue(
+  values: ProjectInstructionFields,
+  context: z.RefinementCtx
+) {
+  // ISO dates compare correctly as text.
+  if (values.deadline < values.issueDate) {
+    context.addIssue({
+      code: "custom",
+      message: "The deadline can't be before the date issued",
+      path: ["deadline"],
+    })
+  }
+}
+
+export const createProjectInstructionSchema = projectInstructionFieldsSchema
+  .extend({
+    issueDate: projectInstructionFieldsSchema.shape.issueDate.refine(
       (value) => !isAfter(parseISO(value), endOfToday()),
       "The date can't be in the future"
     ),
-    discipline: z.enum(instructionDisciplines, "Choose the discipline"),
-    instruction: z.string().trim().min(1, "Write the instruction"),
-    responsibleId: z
-      .string("Choose who is responsible")
-      .min(1, "Choose who is responsible"),
-    deadline: isoDateSchema("Choose the deadline"),
   })
-  .refine((values) => values.deadline >= values.issueDate, {
-    // ISO dates compare correctly as text.
-    message: "The deadline can't be before the date issued",
-    path: ["deadline"],
-  })
+  .superRefine(deadlineNotBeforeIssue)
+
+export const updateProjectInstructionSchema =
+  projectInstructionFieldsSchema.superRefine(deadlineNotBeforeIssue)

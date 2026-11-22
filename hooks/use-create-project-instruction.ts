@@ -3,11 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { projectInstructionsQueryKey } from "@/hooks/use-project-instructions"
 import * as projectsApi from "@/lib/api/projects"
 import { notifyError, notifySuccess } from "@/lib/notify"
-import type { CreateProjectInstructionFormValues } from "@/lib/types/projects"
+import type { ProjectInstructionFormValues } from "@/lib/types/projects"
 
 interface CreateProjectInstructionOptions {
   projectId: string
-  data: CreateProjectInstructionFormValues
+  data: ProjectInstructionFormValues
 }
 
 /** Records an instruction against a project. */

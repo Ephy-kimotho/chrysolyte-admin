@@ -1,7 +1,6 @@
 /**
- * The staff that the wages and site-instruction mocks refer to by id. The
- * Staff & KPI pages use the real API (`lib/api/staff.ts`); this goes once the
- * wages and site-instruction APIs replace their mocks.
+ * The staff that the wages mock refers to by id. The Staff & KPI pages use the
+ * real API (`lib/api/staff.ts`); this goes once the wages API replaces its mock.
  */
 type MockStaffMember = {
   id: string

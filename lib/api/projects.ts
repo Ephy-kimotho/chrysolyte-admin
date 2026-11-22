@@ -4,12 +4,14 @@ import {
   contractTypes,
   projectPhases,
   type CreateProjectFormValues,
-  type CreateProjectInstructionFormValues,
   type CreateProjectInstructionPayload,
   type CreateProjectPayload,
   type Project,
   type ProjectInstruction,
+  type ProjectInstructionFormValues,
   type ProjectInstructionResponse,
+  type UpdateProjectInstructionPayload,
+  type ProjectFilters,
   type ProjectPhase,
   type ProjectResponse,
 } from "@/lib/types/projects"
@@ -58,9 +60,12 @@ function toProject(project: ProjectResponse): Project {
   }
 }
 
-export async function listProjects() {
-  const response =
-    await axiosInstance.get<ProjectResponse[]>("/projects/projects")
+/** Lists projects, narrowed by `filters`, e.g. `{ division: "Construction" }`. */
+export async function listProjects(filters?: ProjectFilters) {
+  const response = await axiosInstance.get<ProjectResponse[]>(
+    "/projects/projects",
+    { params: filters }
+  )
   return response.data.map(toProject)
 }
 
@@ -90,6 +95,13 @@ export async function createProject(values: CreateProjectFormValues) {
 
   const response = await axiosInstance.post("/projects/projects", payload)
   return response.data
+}
+
+/** Deletes a project along with its milestones, activities and other records. */
+export async function deleteProject(projectId: string) {
+  await axiosInstance.delete(
+    `/projects/projects/${encodeURIComponent(projectId)}`
+  )
 }
 
 /** Uploads a project's cover photo, replacing any it had. */
@@ -127,6 +139,7 @@ function toProjectInstruction(
     responsibleId: instruction.responsible_id,
     deadline: instruction.deadline,
     status: instruction.status,
+    response: instruction.response || null,
   }
 }
 
@@ -143,7 +156,7 @@ export async function listProjectInstructions(projectId: string) {
 /** Records an instruction against a project. */
 export async function createProjectInstruction(
   projectId: string,
-  values: CreateProjectInstructionFormValues
+  values: ProjectInstructionFormValues
 ) {
   const payload: CreateProjectInstructionPayload = {
     issue_date: values.issueDate,
@@ -164,6 +177,29 @@ export async function createProjectInstruction(
 export async function closeProjectInstruction(instructionId: string) {
   const response = await axiosInstance.post(
     `/projects/instructions/${encodeURIComponent(instructionId)}/close`
+  )
+  return response.data
+}
+
+/** Saves changes to an instruction. Its status is sent unchanged. */
+export async function updateProjectInstruction(
+  instruction: Pick<ProjectInstruction, "id" | "status">,
+  values: ProjectInstructionFormValues
+) {
+  const payload: UpdateProjectInstructionPayload = {
+    discipline: values.discipline,
+    instruction: values.instruction,
+    responsible_id: values.responsibleId,
+    deadline: values.deadline,
+    response: values.response,
+    // Evidence uploads aren't supported yet.
+    evidence_urls: [],
+    status: instruction.status,
+  }
+
+  const response = await axiosInstance.patch(
+    `/projects/instructions/${encodeURIComponent(instruction.id)}`,
+    payload
   )
   return response.data
 }

@@ -22,17 +22,40 @@ import { useStaffNames } from "@/hooks/use-staff-names"
 
 const columnCount = 7
 
-export function ProjectInstructionsTab({ projectId }: { projectId: string }) {
+type ProjectInstructionsTableProps = {
+  projectId: string
+  titleId?: string
+  title?: string
+  /** Shown before the add button, e.g. a project picker. */
+  controls?: React.ReactNode
+}
+
+/** A project's instructions, with the actions to add, edit, close and delete them. */
+export function ProjectInstructionsTable({
+  projectId,
+  titleId = "project-instructions-heading",
+  title = "Trackable site instructions",
+  controls,
+}: ProjectInstructionsTableProps) {
   const instructionsQuery = useProjectInstructions(projectId)
   const instructions = instructionsQuery.data ?? []
   const staffNames = useStaffNames()
 
   return (
     <TableCard
-      titleId="project-instructions-heading"
-      title="Trackable site instructions"
+      titleId={titleId}
+      title={title}
       titleClassName="text-xl text-heading"
-      action={<AddProjectInstructionDialog projectId={projectId} />}
+      action={
+        controls ? (
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            {controls}
+            <AddProjectInstructionDialog projectId={projectId} />
+          </div>
+        ) : (
+          <AddProjectInstructionDialog projectId={projectId} />
+        )
+      }
     >
       {instructionsQuery.isError ? (
         <LoadError

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { useRemoveProject } from "@/hooks/use-remove-project"
+import { getErrorMessage } from "@/lib/api/errors"
 import type { Project } from "@/lib/types/projects"
 
 type RemoveProjectDialogProps = {
@@ -34,10 +35,7 @@ export function RemoveProjectDialog({ project }: RemoveProjectDialogProps) {
   function handleRemove(event: React.MouseEvent) {
     // Stay open until the removal finishes, so a failure can be shown here.
     event.preventDefault()
-    removeProject.mutate(
-      { id: project.id },
-      { onSuccess: () => setOpen(false) }
-    )
+    removeProject.mutate({ project }, { onSuccess: () => setOpen(false) })
   }
 
   return (
@@ -57,7 +55,8 @@ export function RemoveProjectDialog({ project }: RemoveProjectDialogProps) {
             Remove {project.name}?
           </AlertDialogTitle>
           <AlertDialogDescription className="leading-relaxed">
-            The project and its progress will be removed from the portfolio. You
+            This project and all its data will be permanently deleted, including
+            its milestones, work programme, instructions and photos. You
             can&apos;t undo this.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -67,7 +66,10 @@ export function RemoveProjectDialog({ project }: RemoveProjectDialogProps) {
             role="alert"
             className="rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
           >
-            We couldn&apos;t remove the project. Try again.
+            {getErrorMessage(
+              removeProject.error,
+              "We couldn't remove the project. Try again."
+            )}
           </p>
         )}
 

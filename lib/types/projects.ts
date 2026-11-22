@@ -1,8 +1,8 @@
 import type { z } from "zod"
 
 import type {
-  createProjectInstructionSchema,
   createProjectSchema,
+  updateProjectInstructionSchema,
   uploadProjectPhotoSchema,
 } from "@/lib/schemas/projects"
 
@@ -63,6 +63,11 @@ export type Project = {
   clientNote: string | null
   /** Note for staff only, e.g. something to confirm before work goes ahead. */
   internalNote: string | null
+}
+
+/** Query parameters `GET /projects/projects` can filter by. */
+export type ProjectFilters = {
+  division?: ProjectPhase
 }
 
 /** A project as `GET /projects/projects` returns it. */
@@ -162,6 +167,8 @@ export type ProjectInstruction = {
   deadline: string
   /** As the API sends it, e.g. `Open`. */
   status: string
+  /** How the instruction was answered, or null before anyone has. */
+  response: string | null
 }
 
 /** An instruction as `GET /projects/projects/{project_id}/instructions` returns it. */
@@ -176,10 +183,12 @@ export type ProjectInstructionResponse = {
   /** ISO date (yyyy-MM-dd). */
   deadline: string
   status: string
+  response: string | null
 }
 
-export type CreateProjectInstructionFormValues = z.infer<
-  typeof createProjectInstructionSchema
+/** What the add and update instruction forms hold. */
+export type ProjectInstructionFormValues = z.infer<
+  typeof updateProjectInstructionSchema
 >
 
 /** Request body for `POST /projects/projects/{project_id}/instructions`. */
@@ -192,4 +201,17 @@ export type CreateProjectInstructionPayload = {
   responsible_id: string
   /** ISO date (yyyy-MM-dd). */
   deadline: string
+}
+
+/** Request body for `PATCH /projects/instructions/{instruction_id}`. */
+export type UpdateProjectInstructionPayload = {
+  discipline: InstructionDiscipline
+  instruction: string
+  responsible_id: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+  response: string
+  evidence_urls: string[]
+  /** Sent unchanged; the form doesn't edit it. */
+  status: string
 }

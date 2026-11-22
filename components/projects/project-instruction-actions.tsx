@@ -1,12 +1,11 @@
 "use client"
 
 import { useRef, useState } from "react"
-// Pencil goes back in with the update action.
-import { CircleCheck, EllipsisVertical, Trash2 } from "lucide-react"
+import { CircleCheck, EllipsisVertical, Pencil, Trash2 } from "lucide-react"
 
 import { CloseProjectInstructionDialog } from "@/components/projects/close-project-instruction-dialog"
 import { DeleteProjectInstructionDialog } from "@/components/projects/delete-project-instruction-dialog"
-// import { UpdateProjectInstructionDialog } from "@/components/projects/update-project-instruction-dialog"
+import { UpdateProjectInstructionDialog } from "@/components/projects/update-project-instruction-dialog"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -26,7 +25,7 @@ export function ProjectInstructionActions({
 }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  // Only an open instruction can be closed.
+  // Only an open instruction can be edited or closed.
   const isOpen = instruction.status.toLowerCase() === "open"
 
   // The dialogs open from a menu that's gone by the time they close, so
@@ -52,23 +51,23 @@ export function ProjectInstructionActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48 p-1.5">
-          {/* Hidden until the update API is ready.
-          <DropdownMenuItem
-            className="h-9 px-2"
-            onSelect={() => setOpenDialog("update")}
-          >
-            <Pencil aria-hidden="true" />
-            Update instruction
-          </DropdownMenuItem>
-          */}
           {isOpen && (
-            <DropdownMenuItem
-              className="h-9 px-2"
-              onSelect={() => setOpenDialog("close")}
-            >
-              <CircleCheck aria-hidden="true" />
-              Close instruction
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem
+                className="h-9 px-2"
+                onSelect={() => setOpenDialog("update")}
+              >
+                <Pencil aria-hidden="true" />
+                Update instruction
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="h-9 px-2"
+                onSelect={() => setOpenDialog("close")}
+              >
+                <CircleCheck aria-hidden="true" />
+                Close instruction
+              </DropdownMenuItem>
+            </>
           )}
           <DropdownMenuItem
             variant="destructive"
@@ -81,14 +80,12 @@ export function ProjectInstructionActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Hidden until the update API is ready.
       <UpdateProjectInstructionDialog
         instruction={instruction}
         open={openDialog === "update"}
         onOpenChange={(open) => setOpenDialog(open ? "update" : null)}
         onCloseAutoFocus={focusTrigger}
       />
-      */}
       <CloseProjectInstructionDialog
         instruction={instruction}
         open={openDialog === "close"}

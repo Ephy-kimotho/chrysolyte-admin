@@ -21,15 +21,16 @@ import {
 import { useCreateProjectInstruction } from "@/hooks/use-create-project-instruction"
 import { getErrorMessage } from "@/lib/api/errors"
 import { createProjectInstructionSchema } from "@/lib/schemas/projects"
-import type { CreateProjectInstructionFormValues } from "@/lib/types/projects"
+import type { ProjectInstructionFormValues } from "@/lib/types/projects"
 
 // The date starts on today, the usual case; everything else must be filled in.
-function getDefaultValues(): DefaultValues<CreateProjectInstructionFormValues> {
+function getDefaultValues(): DefaultValues<ProjectInstructionFormValues> {
   return {
     issueDate: format(new Date(), "yyyy-MM-dd"),
     instruction: "",
     responsibleId: "",
     deadline: "",
+    response: "",
   }
 }
 
@@ -46,7 +47,7 @@ export function AddProjectInstructionDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateProjectInstructionFormValues>({
+  } = useForm<ProjectInstructionFormValues>({
     resolver: zodResolver(createProjectInstructionSchema),
     defaultValues: getDefaultValues(),
   })
@@ -61,7 +62,7 @@ export function AddProjectInstructionDialog({
     }
   }
 
-  function onSubmit(data: CreateProjectInstructionFormValues) {
+  function onSubmit(data: ProjectInstructionFormValues) {
     createInstruction.mutate(
       { projectId, data },
       { onSuccess: () => handleOpenChange(false) }
@@ -105,6 +106,7 @@ export function AddProjectInstructionDialog({
             register={register}
             errors={errors}
             idPrefix="add-instruction"
+            variant="create"
           />
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

@@ -19,9 +19,11 @@ const phaseIcons: Record<ProjectPhase, typeof HardHat> = {
 
 type ProjectCardProps = {
   project: Project
+  /** Offers the Remove action. On by default. */
+  removable?: boolean
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, removable = true }: ProjectCardProps) {
   const PhaseIcon = phaseIcons[project.phase]
 
   return (
@@ -77,7 +79,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <Button asChild className="h-9 rounded-full px-4 font-semibold">
             <Link href={`/projects/${project.id}`}>Open project</Link>
           </Button>
-          <RemoveProjectDialog project={project} />
+          {removable && <RemoveProjectDialog project={project} />}
         </div>
       </div>
     </Card>
