@@ -4,6 +4,7 @@ import { z } from "zod"
 import { officeTaskCategories } from "@/lib/types/coo-operations"
 
 export const createOfficeTaskSchema = z.object({
+  projectId: z.string("Choose the project").min(1, "Choose the project"),
   category: z.enum(officeTaskCategories, "Choose a category"),
   task: z.string().trim().min(1, "Describe the task"),
   owner: z.string().trim().min(1, "Enter who owns the task"),
@@ -16,4 +17,6 @@ export const createOfficeTaskSchema = z.object({
     .int("Use a whole number")
     .min(0, "Progress can't be below 0%")
     .max(100, "Progress can't be above 100%"),
+  /** Optional. */
+  notes: z.string().trim(),
 })

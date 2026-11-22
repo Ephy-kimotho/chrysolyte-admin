@@ -3,10 +3,9 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
-import { Controller, useForm, type DefaultValues } from "react-hook-form"
+import { useForm, type DefaultValues } from "react-hook-form"
 
-import { authInputClassName } from "@/components/auth/styles"
-import { DatePicker } from "@/components/date-picker"
+import { OfficeTaskFormFields } from "@/components/coo-operations/office-task-form-fields"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,28 +16,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useCreateOfficeTask } from "@/hooks/use-create-office-task"
+import { getErrorMessage } from "@/lib/api/errors"
 import { createOfficeTaskSchema } from "@/lib/schemas/coo-operations"
-import {
-  officeTaskCategories,
-  type CreateOfficeTaskFormValues,
-} from "@/lib/types/coo-operations"
+import type { CreateOfficeTaskFormValues } from "@/lib/types/coo-operations"
 
 // No category is preselected, so the user has to choose one.
 const defaultValues: DefaultValues<CreateOfficeTaskFormValues> = {
+  projectId: "",
   task: "",
   owner: "",
   deadline: "",
   progress: 0,
+  notes: "",
 }
 
 export function AddOfficeTaskDialog() {
@@ -87,8 +77,8 @@ export function AddOfficeTaskDialog() {
             Add an office task
           </DialogTitle>
           <DialogDescription className="leading-relaxed">
-            The task is marked overdue if it isn&apos;t complete by its
-            deadline.
+            Track it against a project. It shows as overdue if it&apos;s still
+            active after its deadline.
           </DialogDescription>
         </DialogHeader>
 
@@ -98,112 +88,19 @@ export function AddOfficeTaskDialog() {
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t add the task. Try again.
+              {getErrorMessage(
+                createOfficeTask.error,
+                "We couldn't add the task. Try again."
+              )}
             </p>
           )}
 
-          <div className="flex flex-col gap-5">
-            <Field data-invalid={!!errors.task}>
-              <FieldLabel htmlFor="office-task-task">Task</FieldLabel>
-              <Input
-                id="office-task-task"
-                autoComplete="off"
-                placeholder="e.g. Prepare weekly project cost report"
-                aria-invalid={!!errors.task}
-                className={authInputClassName}
-                {...register("task")}
-              />
-              <FieldError>{errors.task?.message}</FieldError>
-            </Field>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <Field data-invalid={!!errors.category}>
-                <FieldLabel htmlFor="office-task-category">Category</FieldLabel>
-                <Controller
-                  control={control}
-                  name="category"
-                  render={({ field }) => (
-                    <Select
-                      name={field.name}
-                      // "" shows the placeholder again after the form resets.
-                      value={field.value ?? ""}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        id="office-task-category"
-                        ref={field.ref}
-                        onBlur={field.onBlur}
-                        aria-invalid={!!errors.category}
-                        className="h-11! w-full rounded-xl bg-background/60 px-3.5"
-                      >
-                        <SelectValue placeholder="Choose a category" />
-                      </SelectTrigger>
-                      <SelectContent position="popper">
-                        {officeTaskCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <FieldError>{errors.category?.message}</FieldError>
-              </Field>
-
-              <Field data-invalid={!!errors.owner}>
-                <FieldLabel htmlFor="office-task-owner">Owner</FieldLabel>
-                <Input
-                  id="office-task-owner"
-                  autoComplete="off"
-                  placeholder="e.g. Anne Wambui"
-                  aria-invalid={!!errors.owner}
-                  className={authInputClassName}
-                  {...register("owner")}
-                />
-                <FieldError>{errors.owner?.message}</FieldError>
-              </Field>
-
-              <Field data-invalid={!!errors.deadline}>
-                <FieldLabel htmlFor="office-task-deadline">Deadline</FieldLabel>
-                <Controller
-                  control={control}
-                  name="deadline"
-                  render={({ field }) => (
-                    <DatePicker
-                      id="office-task-deadline"
-                      ref={field.ref}
-                      name={field.name}
-                      value={field.value}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      placeholder="Choose the deadline"
-                      aria-invalid={!!errors.deadline}
-                    />
-                  )}
-                />
-                <FieldError>{errors.deadline?.message}</FieldError>
-              </Field>
-
-              <Field data-invalid={!!errors.progress}>
-                <FieldLabel htmlFor="office-task-progress">
-                  Progress (%)
-                </FieldLabel>
-                <Input
-                  id="office-task-progress"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  max={100}
-                  step={1}
-                  aria-invalid={!!errors.progress}
-                  className={authInputClassName}
-                  {...register("progress", { valueAsNumber: true })}
-                />
-                <FieldError>{errors.progress?.message}</FieldError>
-              </Field>
-            </div>
-          </div>
+          <OfficeTaskFormFields
+            control={control}
+            register={register}
+            errors={errors}
+            idPrefix="add-office-task"
+          />
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>
