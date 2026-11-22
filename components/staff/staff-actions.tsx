@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { EllipsisVertical, Eye, Pencil, Trash2 } from "lucide-react"
+import { EllipsisVertical, Eye, FolderPlus, Pencil, Trash2 } from "lucide-react"
 
+import { AssignProjectDialog } from "@/components/staff/assign-project-dialog"
 import { DeleteStaffDialog } from "@/components/staff/delete-staff-dialog"
 import { UpdateStaffDialog } from "@/components/staff/update-staff-dialog"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { StaffMember } from "@/lib/types/staff"
 
-type OpenDialog = "update" | "delete" | null
+type OpenDialog = "update" | "assign" | "delete" | null
 
 type StaffActionsProps = {
   member: StaffMember
@@ -73,6 +74,13 @@ export function StaffActions({
             Update staff
           </DropdownMenuItem>
           <DropdownMenuItem
+            className="h-9 px-2"
+            onSelect={() => setOpenDialog("assign")}
+          >
+            <FolderPlus aria-hidden="true" />
+            Assign project
+          </DropdownMenuItem>
+          <DropdownMenuItem
             variant="destructive"
             className="h-9 px-2"
             onSelect={() => setOpenDialog("delete")}
@@ -87,6 +95,12 @@ export function StaffActions({
         member={member}
         open={openDialog === "update"}
         onOpenChange={(open) => setOpenDialog(open ? "update" : null)}
+        onCloseAutoFocus={focusTrigger}
+      />
+      <AssignProjectDialog
+        member={member}
+        open={openDialog === "assign"}
+        onOpenChange={(open) => setOpenDialog(open ? "assign" : null)}
         onCloseAutoFocus={focusTrigger}
       />
       <DeleteStaffDialog

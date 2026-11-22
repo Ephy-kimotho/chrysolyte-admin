@@ -127,10 +127,28 @@ export const createStaffSkillSchema = z.object({
     .string()
     .trim()
     .min(1, "Enter the skill")
-    .max(30, "Keep the skill to 30 characters"),
+    .max(50, "Keep the skill to 50 characters"),
   /** Optional. */
   description: z
     .string()
     .trim()
-    .max(50, "Keep the description to 50 characters"),
+    .max(100, "Keep the description to 100 characters"),
 })
+
+const isoDateSchema = (label: string) =>
+  z
+    .string()
+    .min(1, `Choose the ${label}`)
+    .refine(isValidIsoDate, "Enter a valid date")
+
+export const assignProjectSchema = z
+  .object({
+    projectId: z.string("Choose a project").min(1, "Choose a project"),
+    assignedFrom: isoDateSchema("start date"),
+    assignedTo: isoDateSchema("end date"),
+  })
+  .refine((values) => values.assignedTo >= values.assignedFrom, {
+    // ISO dates compare correctly as text.
+    message: "The end date can't be before the start date",
+    path: ["assignedTo"],
+  })

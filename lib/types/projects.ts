@@ -1,6 +1,7 @@
 import type { z } from "zod"
 
 import type {
+  createProjectInstructionSchema,
   createProjectSchema,
   uploadProjectPhotoSchema,
 } from "@/lib/schemas/projects"
@@ -135,3 +136,60 @@ export type UploadProjectPhotoFormInput = z.input<
 export type UploadProjectPhotoFormValues = z.output<
   typeof uploadProjectPhotoSchema
 >
+
+/** The disciplines a project instruction can come from. */
+export const instructionDisciplines = [
+  "Architecture",
+  "Structural",
+  "MEP",
+  "Landscape",
+  "QS",
+] as const
+
+export type InstructionDiscipline = (typeof instructionDisciplines)[number]
+
+export type ProjectInstruction = {
+  id: string
+  projectId: string
+  /** ISO date (yyyy-MM-dd). */
+  issueDate: string
+  /** One of `instructionDisciplines`, unless the API sends one the app doesn't know. */
+  discipline: string
+  instruction: string
+  /** Staff ID; look the name up with `useStaffNames`. */
+  responsibleId: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+  /** As the API sends it, e.g. `Open`. */
+  status: string
+}
+
+/** An instruction as `GET /projects/projects/{project_id}/instructions` returns it. */
+export type ProjectInstructionResponse = {
+  instruction_id: string
+  project_id: string
+  /** ISO date (yyyy-MM-dd). */
+  issue_date: string
+  discipline: string
+  instruction: string
+  responsible_id: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+  status: string
+}
+
+export type CreateProjectInstructionFormValues = z.infer<
+  typeof createProjectInstructionSchema
+>
+
+/** Request body for `POST /projects/projects/{project_id}/instructions`. */
+export type CreateProjectInstructionPayload = {
+  /** ISO date (yyyy-MM-dd). */
+  issue_date: string
+  discipline: InstructionDiscipline
+  instruction: string
+  /** The staff member responsible for carrying it out. */
+  responsible_id: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+}

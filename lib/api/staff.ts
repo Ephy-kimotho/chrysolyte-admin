@@ -3,6 +3,8 @@ import {
   emergencyContactRelationships,
   staffDivisions,
   staffHealthStatuses,
+  type AssignProjectFormValues,
+  type AssignProjectPayload,
   type CreateEmergencyContactFormValues,
   type CreateEmergencyContactPayload,
   type CreateStaffMemberFormValues,
@@ -10,6 +12,8 @@ import {
   type CreateStaffMemberPayload,
   type CreateStaffSkillFormValues,
   type CreateStaffSkillPayload,
+  type StaffAssignment,
+  type StaffAssignmentResponse,
   type StaffDashboard,
   type StaffDashboardResponse,
   type StaffDivision,
@@ -135,6 +139,41 @@ export async function createStaffSkill(
     payload
   )
   return response.data
+}
+
+/** Assigns a staff member to a project for a date range. */
+export async function assignProject(
+  staffId: string,
+  values: AssignProjectFormValues
+) {
+  const payload: AssignProjectPayload = {
+    project_id: values.projectId,
+    assigned_from: values.assignedFrom,
+    assigned_to: values.assignedTo,
+  }
+
+  const response = await axiosInstance.post(
+    `/people/staff/${staffId}/assignments`,
+    payload
+  )
+  return response.data
+}
+
+/** Every project assignment a staff member has had, past ones included. */
+export async function listStaffAssignments(
+  staffId: string
+): Promise<StaffAssignment[]> {
+  const response = await axiosInstance.get<StaffAssignmentResponse[]>(
+    `/people/staff/${staffId}/assignments`,
+    { params: { current_only: false } }
+  )
+  return response.data.map((assignment) => ({
+    id: assignment.assignment_id,
+    projectId: assignment.project_id,
+    assignedFrom: assignment.assigned_from,
+    assignedTo: assignment.assigned_to,
+    createdAt: assignment.created_at,
+  }))
 }
 
 export async function deleteStaffSkill(skillId: string) {

@@ -4,8 +4,12 @@ import {
   contractTypes,
   projectPhases,
   type CreateProjectFormValues,
+  type CreateProjectInstructionFormValues,
+  type CreateProjectInstructionPayload,
   type CreateProjectPayload,
   type Project,
+  type ProjectInstruction,
+  type ProjectInstructionResponse,
   type ProjectPhase,
   type ProjectResponse,
 } from "@/lib/types/projects"
@@ -104,5 +108,68 @@ export async function uploadProjectPhoto(projectId: string, photo: File) {
 export async function deleteProjectPhoto(projectId: string) {
   await axiosInstance.delete(
     `/projects/projects/${encodeURIComponent(projectId)}/photo`
+  )
+}
+
+function instructionsPath(projectId: string) {
+  return `/projects/projects/${encodeURIComponent(projectId)}/instructions`
+}
+
+function toProjectInstruction(
+  instruction: ProjectInstructionResponse
+): ProjectInstruction {
+  return {
+    id: instruction.instruction_id,
+    projectId: instruction.project_id,
+    issueDate: instruction.issue_date,
+    discipline: instruction.discipline,
+    instruction: instruction.instruction,
+    responsibleId: instruction.responsible_id,
+    deadline: instruction.deadline,
+    status: instruction.status,
+  }
+}
+
+/** A project's instructions, oldest issued first. */
+export async function listProjectInstructions(projectId: string) {
+  const response = await axiosInstance.get<ProjectInstructionResponse[]>(
+    instructionsPath(projectId)
+  )
+  return response.data
+    .map(toProjectInstruction)
+    .sort((a, b) => a.issueDate.localeCompare(b.issueDate))
+}
+
+/** Records an instruction against a project. */
+export async function createProjectInstruction(
+  projectId: string,
+  values: CreateProjectInstructionFormValues
+) {
+  const payload: CreateProjectInstructionPayload = {
+    issue_date: values.issueDate,
+    discipline: values.discipline,
+    instruction: values.instruction,
+    responsible_id: values.responsibleId,
+    deadline: values.deadline,
+  }
+
+  const response = await axiosInstance.post(
+    instructionsPath(projectId),
+    payload
+  )
+  return response.data
+}
+
+/** Marks an instruction as carried out. */
+export async function closeProjectInstruction(instructionId: string) {
+  const response = await axiosInstance.post(
+    `/projects/instructions/${encodeURIComponent(instructionId)}/close`
+  )
+  return response.data
+}
+
+export async function deleteProjectInstruction(instructionId: string) {
+  await axiosInstance.delete(
+    `/projects/instructions/${encodeURIComponent(instructionId)}`
   )
 }

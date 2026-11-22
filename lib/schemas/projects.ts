@@ -1,8 +1,12 @@
-import { isValid, parseISO } from "date-fns"
+import { endOfToday, isAfter, isValid, parseISO } from "date-fns"
 import { z } from "zod"
 
 import { imageFileSchema } from "@/lib/schemas/files"
-import { contractTypes, projectPhases } from "@/lib/types/projects"
+import {
+  contractTypes,
+  instructionDisciplines,
+  projectPhases,
+} from "@/lib/types/projects"
 
 const isoDateSchema = (requiredMessage: string) =>
   z
@@ -51,3 +55,22 @@ export const uploadProjectPhotoSchema = z.object({
     .nullable()
     .refine((photo) => photo !== null, "Choose a photo to upload"),
 })
+
+export const createProjectInstructionSchema = z
+  .object({
+    issueDate: isoDateSchema("Choose the date issued").refine(
+      (value) => !isAfter(parseISO(value), endOfToday()),
+      "The date can't be in the future"
+    ),
+    discipline: z.enum(instructionDisciplines, "Choose the discipline"),
+    instruction: z.string().trim().min(1, "Write the instruction"),
+    responsibleId: z
+      .string("Choose who is responsible")
+      .min(1, "Choose who is responsible"),
+    deadline: isoDateSchema("Choose the deadline"),
+  })
+  .refine((values) => values.deadline >= values.issueDate, {
+    // ISO dates compare correctly as text.
+    message: "The deadline can't be before the date issued",
+    path: ["deadline"],
+  })

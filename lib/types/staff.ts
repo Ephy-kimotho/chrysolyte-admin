@@ -1,6 +1,7 @@
 import type { z } from "zod"
 
 import type {
+  assignProjectSchema,
   createEmergencyContactSchema,
   createStaffMemberSchema,
   createStaffSkillSchema,
@@ -278,3 +279,40 @@ export type StaffProfile = {
 export type UploadStaffPhotoFormInput = z.input<typeof uploadStaffPhotoSchema>
 
 export type UploadStaffPhotoFormValues = z.output<typeof uploadStaffPhotoSchema>
+
+export type AssignProjectFormValues = z.infer<typeof assignProjectSchema>
+
+/** Request body for `POST /people/staff/{staff_id}/assignments`. */
+export type AssignProjectPayload = {
+  project_id: string
+  /** ISO date (yyyy-MM-dd). */
+  assigned_from: string
+  /** ISO date (yyyy-MM-dd). */
+  assigned_to: string
+}
+
+/** An assignment as `GET /people/staff/{staff_id}/assignments` returns it. */
+export type StaffAssignmentResponse = {
+  assignment_id: string
+  staff_id: string
+  /** The project's reference code. */
+  project_id: string
+  /** ISO date (yyyy-MM-dd). */
+  assigned_from: string
+  /** ISO date (yyyy-MM-dd). */
+  assigned_to: string
+  /** Timestamp with offset, e.g. `2026-11-21 10:37:44.460878+00:00`. */
+  created_at: string
+}
+
+export type StaffAssignment = {
+  id: string
+  /** The project's reference code, which is also its id. */
+  projectId: string
+  /** ISO date (yyyy-MM-dd). */
+  assignedFrom: string
+  /** ISO date (yyyy-MM-dd). */
+  assignedTo: string
+  /** Timestamp with offset, e.g. `2026-11-21 10:37:44.460878+00:00`. */
+  createdAt: string
+}

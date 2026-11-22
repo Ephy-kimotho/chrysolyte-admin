@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { ChevronLeft } from "lucide-react"
 
@@ -12,6 +13,7 @@ import { DeleteStaffSkillDialog } from "@/components/staff/delete-staff-skill-di
 import { StaffActions } from "@/components/staff/staff-actions"
 import { StaffHealthBadge } from "@/components/staff/staff-health-badge"
 import { UploadStaffPhotoDialog } from "@/components/staff/upload-staff-photo-dialog"
+import { tableCellClassName, tableHeadClassName } from "@/components/table-card"
 import { UserAvatar } from "@/components/user-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,9 +26,19 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { useProjects } from "@/hooks/use-projects"
+import { useStaffAssignments } from "@/hooks/use-staff-assignments"
 import { isStaffNotFound, useStaffProfile } from "@/hooks/use-staff-profile"
 import { getErrorMessage } from "@/lib/api/errors"
+import type { Project } from "@/lib/types/projects"
 import {
   formatCurrency,
   formatDate,
@@ -36,6 +48,7 @@ import {
 import {
   inactiveAfterDays,
   type EmergencyContact,
+  type StaffAssignment,
   type StaffMember,
   type StaffSkill,
 } from "@/lib/types/staff"
@@ -164,6 +177,156 @@ function KpiPerformance({ member }: { member: StaffMember }) {
   )
 }
 
+type AssignmentStatus = "Current" | "Upcoming" | "Ended"
+
+const assignmentStatusVariants: Record<
+  AssignmentStatus,
+  "success" | "secondary" | "outline"
+> = {
+  Current: "success",
+  Upcoming: "secondary",
+  Ended: "outline",
+}
+
+/** Where an assignment stands on `today`, an ISO date. */
+function getAssignmentStatus(
+  assignment: StaffAssignment,
+  today: string
+): AssignmentStatus {
+  // ISO dates compare correctly as text.
+  if (assignment.assignedFrom > today) return "Upcoming"
+  if (assignment.assignedTo < today) return "Ended"
+  return "Current"
+}
+
+function ProjectAssignments({
+  staffName,
+  assignments,
+  projects,
+  today,
+}: {
+  staffName: string
+  assignments: ReturnType<typeof useStaffAssignments>
+  projects: Project[]
+  today: string
+}) {
+  let content: React.ReactNode
+
+  if (assignments.isPending) {
+    content = (
+      <div aria-busy="true" className="flex flex-col gap-3">
+        <p role="status" className="sr-only">
+          Loading project assignments…
+        </p>
+        <Skeleton className="h-12 rounded-xl" />
+        <Skeleton className="h-12 rounded-xl" />
+      </div>
+    )
+  } else if (assignments.isError) {
+    content = (
+      <div role="alert" className="flex flex-col items-start gap-3">
+        <p className="text-sm text-destructive">
+          {getErrorMessage(
+            assignments.error,
+            "We couldn't load the project assignments."
+          )}
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => assignments.refetch()}
+          disabled={assignments.isFetching}
+          className="h-9 rounded-full px-4"
+        >
+          {assignments.isFetching ? "Retrying…" : "Try again"}
+        </Button>
+      </div>
+    )
+  } else if (assignments.data.length === 0) {
+    content = (
+      <p className="text-sm text-muted-foreground">
+        {staffName} hasn&apos;t been assigned to a project yet. Assign one from
+        the actions menu.
+      </p>
+    )
+  } else {
+    // Latest start first, so upcoming and current work sits at the top.
+    const sorted = [...assignments.data].sort((a, b) =>
+      b.assignedFrom.localeCompare(a.assignedFrom)
+    )
+
+    content = (
+      <Table className="min-w-[34rem]">
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className={tableHeadClassName}>Project</TableHead>
+            <TableHead className={tableHeadClassName}>From</TableHead>
+            <TableHead className={tableHeadClassName}>To</TableHead>
+            <TableHead className={tableHeadClassName}>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sorted.map((assignment) => {
+            const project = projects.find(
+              (item) => item.id === assignment.projectId
+            )
+            const status = getAssignmentStatus(assignment, today)
+
+            return (
+              <TableRow key={assignment.id}>
+                <TableCell className={`${tableCellClassName} min-w-48`}>
+                  <div className="flex flex-col gap-0.5">
+                    {project ? (
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className={`${linkClassName} w-fit font-medium`}
+                      >
+                        {project.name}
+                      </Link>
+                    ) : (
+                      <span className="font-medium">
+                        {assignment.projectId}
+                      </span>
+                    )}
+                    {project && (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {project.code}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell
+                  className={`${tableCellClassName} whitespace-nowrap tabular-nums`}
+                >
+                  <time dateTime={assignment.assignedFrom}>
+                    {formatDate(assignment.assignedFrom)}
+                  </time>
+                </TableCell>
+                <TableCell
+                  className={`${tableCellClassName} whitespace-nowrap tabular-nums`}
+                >
+                  <time dateTime={assignment.assignedTo}>
+                    {formatDate(assignment.assignedTo)}
+                  </time>
+                </TableCell>
+                <TableCell className={tableCellClassName}>
+                  <Badge
+                    variant={assignmentStatusVariants[status]}
+                    className="h-6 font-semibold"
+                  >
+                    {status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    )
+  }
+
+  return <Section title="Project assignments">{content}</Section>
+}
+
 function StaffSkills({
   staffId,
   staffName,
@@ -279,7 +442,9 @@ type StaffProfileViewProps = {
 export function StaffProfileView({ staffId }: StaffProfileViewProps) {
   const router = useRouter()
   const profile = useStaffProfile(staffId)
+  const assignments = useStaffAssignments(staffId)
   const { data: projects = [] } = useProjects()
+  const today = format(new Date(), "yyyy-MM-dd")
 
   if (profile.isPending) {
     return (
@@ -345,7 +510,14 @@ export function StaffProfileView({ staffId }: StaffProfileViewProps) {
   }
 
   const { member, skills, emergencyContacts } = profile.data
-  const project = projects.find((item) => item.id === member.projectId)
+  // The latest-starting assignment running today, if there is one.
+  const currentAssignment = (assignments.data ?? [])
+    .filter(
+      (assignment) => getAssignmentStatus(assignment, today) === "Current"
+    )
+    .sort((a, b) => b.assignedFrom.localeCompare(a.assignedFrom))[0]
+  const currentProjectId = currentAssignment?.projectId ?? member.projectId
+  const project = projects.find((item) => item.id === currentProjectId)
   const { daysSinceActive } = member
   const isInactive =
     daysSinceActive !== null && daysSinceActive > inactiveAfterDays
@@ -426,6 +598,13 @@ export function StaffProfileView({ staffId }: StaffProfileViewProps) {
             staffName={member.fullName}
             contacts={emergencyContacts}
           />
+
+          <ProjectAssignments
+            staffName={member.fullName}
+            assignments={assignments}
+            projects={projects}
+            today={today}
+          />
         </div>
 
         <div className="flex flex-col gap-4">
@@ -503,7 +682,7 @@ export function StaffProfileView({ staffId }: StaffProfileViewProps) {
                       {project.name}
                     </Link>
                   ) : (
-                    "Unassigned"
+                    (currentProjectId ?? "Unassigned")
                   ),
                 },
                 {
