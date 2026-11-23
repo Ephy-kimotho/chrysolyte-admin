@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { DraftingCompass, HardHat } from "lucide-react"
+import { Building2, DraftingCompass, HardHat } from "lucide-react"
 
 import { RemoveProjectDialog } from "@/components/projects/remove-project-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -61,6 +61,21 @@ export function ProjectCard({ project, removable = true }: ProjectCardProps) {
             {project.code} · {project.location}
           </p>
         </div>
+
+        <p className="flex min-w-0 items-center gap-1.5 text-sm">
+          <Building2
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+          <span className="sr-only">Client:</span>
+          {project.client ? (
+            <span className="truncate" title={project.client}>
+              {project.client}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">No client linked</span>
+          )}
+        </p>
 
         <Progress
           value={project.progress}

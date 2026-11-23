@@ -1,6 +1,8 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import Link from "next/link"
+import { Search } from "lucide-react"
 
 import { AddStaffDialog } from "@/components/staff/add-staff-dialog"
 import { StaffActions } from "@/components/staff/staff-actions"
@@ -10,6 +12,7 @@ import { StaffStats } from "@/components/staff/staff-stats"
 import { UserAvatar } from "@/components/user-avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -22,6 +25,7 @@ import {
 import { useProjects } from "@/hooks/use-projects"
 import { useStaff } from "@/hooks/use-staff"
 import { getErrorMessage } from "@/lib/api/errors"
+import { pluralize } from "@/lib/format"
 import type { StaffMember } from "@/lib/types/staff"
 
 const headClassName =
@@ -55,9 +59,31 @@ function StaffIdentity({ member }: { member: StaffMember }) {
   )
 }
 
+/** Whether the member's name or email contains `term`, ignoring case. */
+function matchesSearch(member: StaffMember, term: string) {
+  const lower = term.toLowerCase()
+  return (
+    member.fullName.toLowerCase().includes(lower) ||
+    member.email.toLowerCase().includes(lower)
+  )
+}
+
 export function StaffView() {
   const staff = useStaff()
   const { data: projects = [] } = useProjects()
+  const [search, setSearch] = useState("")
+  const searchTerm = search.trim()
+
+  // The whole list is already loaded, so search it here.
+  const visibleStaff = useMemo(
+    () =>
+      searchTerm
+        ? (staff.data ?? []).filter((member) =>
+            matchesSearch(member, searchTerm)
+          )
+        : (staff.data ?? []),
+    [staff.data, searchTerm]
+  )
 
   function assignmentName(projectId: string | null) {
     const project = projects.find((item) => item.id === projectId)
@@ -84,6 +110,21 @@ export function StaffView() {
 
       <StaffStats />
 
+      <div className="relative w-full sm:max-w-sm">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by name or email"
+          aria-label="Search staff by name or email"
+          className="h-11 rounded-xl bg-background/60 pr-3.5 pl-10 md:text-sm"
+        />
+      </div>
+
       {staff.isPending ? (
         <StaffSkeleton />
       ) : staff.isError ? (
@@ -107,8 +148,22 @@ export function StaffView() {
         <p className="rounded-2xl border border-dashed px-5 py-10 text-center text-sm text-muted-foreground">
           No staff yet. Add someone to start tracking their performance.
         </p>
+      ) : visibleStaff.length === 0 ? (
+        <p
+          role="status"
+          className="rounded-2xl border border-dashed px-5 py-10 text-center text-sm text-muted-foreground"
+        >
+          No staff match “{searchTerm}”.
+        </p>
       ) : (
         <>
+          {searchTerm && (
+            <p role="status" className="sr-only">
+              {visibleStaff.length}{" "}
+              {pluralize(visibleStaff.length, "staff member", "staff members")}{" "}
+              found
+            </p>
+          )}
           {/* Wide screens: a table. */}
           <Card className="hidden rounded-2xl px-2 py-1 lg:flex">
             <Table>
@@ -127,7 +182,7 @@ export function StaffView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staff.data.map((member) => (
+                {visibleStaff.map((member) => (
                   <TableRow key={member.id}>
                     <TableCell className={`${cellClassName} min-w-52`}>
                       <StaffIdentity member={member} />
@@ -166,7 +221,7 @@ export function StaffView() {
 
           {/* Smaller screens: one card per staff member. */}
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:hidden">
-            {staff.data.map((member) => (
+            {visibleStaff.map((member) => (
               <li key={member.id}>
                 <Card className="h-full gap-4 rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-3">

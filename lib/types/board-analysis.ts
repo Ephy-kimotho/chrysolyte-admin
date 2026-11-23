@@ -1,31 +1,65 @@
-import type { ProjectPhase } from "@/lib/types/projects"
+/** Portfolio totals as `GET /firmcontrol/board` returns them. Amounts in KES. */
+export type BoardPortfolioResponse = {
+  total_projects: number
+  total_contract_value: number
+  total_collected: number
+  total_costs: number
+  /** Contract value minus collected; negative when more was collected. */
+  total_outstanding: number
+  /** Collected minus costs. */
+  total_margin: number
+}
 
-export const projectHealthStatuses = ["On track", "At risk", "Behind"] as const
+/** A project as `GET /firmcontrol/board` returns it. Amounts in KES. */
+export type BoardProjectResponse = {
+  project_id: string
+  name: string
+  /** e.g. `Design` or `Construction`. */
+  division: string
+  /** e.g. `Active`. */
+  status: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
+  contract_value: number
+  collected: number
+  costs: number
+}
 
-export type ProjectHealthStatus = (typeof projectHealthStatuses)[number]
+/** Response from `GET /firmcontrol/board`. */
+export type BoardAnalysisResponse = {
+  portfolio: BoardPortfolioResponse
+  projects: BoardProjectResponse[]
+}
 
+/** Portfolio totals in Kenyan shillings. */
+export type BoardPortfolio = {
+  projectCount: number
+  contractValue: number
+  collected: number
+  costs: number
+  /** Contract value minus collected; negative when more was collected. */
+  outstanding: number
+  /** Collected minus costs. */
+  margin: number
+}
+
+/** Amounts in Kenyan shillings. */
 export type BoardProjectSummary = {
+  /** The project's reference code, which is also its id. */
   id: string
   name: string
-  phase: ProjectPhase
-  /** Milestone-derived completion percentage, 0–100. */
-  progress: number
-  status: ProjectHealthStatus
-  /** Amounts in Kenyan shillings. */
+  /** As the API sends it, e.g. `Construction`. */
+  division: string
+  /** As the API sends it, e.g. `Active`. */
+  status: string
+  /** ISO date (yyyy-MM-dd). */
+  deadline: string
   contractValue: number
-  receipts: number
+  collected: number
   costs: number
 }
 
 export type BoardAnalysis = {
-  /** Average completion across the portfolio, 0–100. */
-  averageProgress: number
-  /** Portfolio totals in Kenyan shillings. */
-  contractValue: number
-  receipts: number
-  costs: number
-  lowStockNotices: number
-  openSiteInstructions: number
-  overdueActivities: number
+  portfolio: BoardPortfolio
   projects: BoardProjectSummary[]
 }

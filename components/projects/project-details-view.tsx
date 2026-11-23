@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { Building2, ChevronLeft } from "lucide-react"
 
 import { ProjectInstructionsTable } from "@/components/projects/project-instructions-table"
 import { ProjectSiteStaffTab } from "@/components/projects/project-site-staff-tab"
@@ -106,7 +106,14 @@ function ProjectDetails({ projectId }: ProjectDetailsViewProps) {
         >
           {project.name}
         </h2>
-        <p className="pt-2 text-sm">{meta.join(" · ")}</p>
+        <p className="flex items-start gap-1.5 text-sm font-medium">
+          <Building2 aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <span className="text-accent-foreground/75">Client:</span>{" "}
+            {project.client ?? "Not linked yet"}
+          </span>
+        </p>
+        <p className="pt-1 text-sm">{meta.join(" · ")}</p>
       </section>
 
       <section

@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
 import { useForm, type DefaultValues } from "react-hook-form"
 
-import { authInputClassName } from "@/components/auth/styles"
 import { storeAddButtonClassName } from "@/components/stores/store-card"
+import { WelfareItemFormFields } from "@/components/stores/welfare-item-form-fields"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,53 +17,54 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { useCreateWelfareItem } from "@/hooks/use-create-welfare-item"
+import { getErrorMessage } from "@/lib/api/errors"
 import { createWelfareItemSchema } from "@/lib/schemas/stores"
-import type { CreateWelfareItemFormValues } from "@/lib/types/stores"
+import type {
+  CreateWelfareItemFormValues,
+  WelfareCategory,
+} from "@/lib/types/stores"
 
-const defaultValues: DefaultValues<CreateWelfareItemFormValues> = {
-  name: "",
-  unit: "",
+function getDefaultValues(
+  category?: WelfareCategory
+): DefaultValues<CreateWelfareItemFormValues> {
+  return { category, item: "", unit: "" }
 }
 
 type AddWelfareItemDialogProps = {
-  storeId: string
-  /** e.g. "Food store". */
-  storeName: string
+  /** Starts the form on this category, e.g. the one being viewed. */
+  defaultCategory?: WelfareCategory
 }
 
 export function AddWelfareItemDialog({
-  storeId,
-  storeName,
+  defaultCategory,
 }: AddWelfareItemDialogProps) {
   const [open, setOpen] = useState(false)
   const createWelfareItem = useCreateWelfareItem()
   const {
+    control,
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<CreateWelfareItemFormValues>({
     resolver: zodResolver(createWelfareItemSchema),
-    defaultValues,
+    defaultValues: getDefaultValues(defaultCategory),
   })
-  const idPrefix = `welfare-item-${storeId}`
 
-  // Every opening starts with an empty form and no leftover error.
+  // Every opening starts with a fresh form and no leftover error.
   function handleOpenChange(nextOpen: boolean) {
     if (createWelfareItem.isPending) return
     setOpen(nextOpen)
-    if (!nextOpen) {
-      reset(defaultValues)
+    if (nextOpen) {
+      reset(getDefaultValues(defaultCategory))
       createWelfareItem.reset()
     }
   }
 
   function onSubmit(data: CreateWelfareItemFormValues) {
     createWelfareItem.mutate(
-      { storeId, data },
+      { data },
       { onSuccess: () => handleOpenChange(false) }
     )
   }
@@ -71,23 +72,20 @@ export function AddWelfareItemDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          className={storeAddButtonClassName}
-          aria-label={`Add item to ${storeName}`}
-        >
+        <Button className={storeAddButtonClassName}>
           <Plus aria-hidden="true" />
-          Item
+          Welfare item
         </Button>
       </DialogTrigger>
 
       <DialogContent className="gap-6 rounded-2xl p-5 sm:p-6">
         <DialogHeader className="pr-8">
           <DialogTitle className="text-lg font-bold text-heading">
-            Add to {storeName.toLowerCase()}
+            Add a welfare item
           </DialogTitle>
           <DialogDescription className="leading-relaxed">
-            The item shows as low stock when its quantity drops below the
-            minimum.
+            Adds food, beddings or toiletries to the welfare stores. It shows as
+            low stock when the quantity drops below the minimum.
           </DialogDescription>
         </DialogHeader>
 
@@ -97,69 +95,19 @@ export function AddWelfareItemDialog({
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t add the item. Try again.
+              {getErrorMessage(
+                createWelfareItem.error,
+                "We couldn't add the item. Try again."
+              )}
             </p>
           )}
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Field data-invalid={!!errors.name}>
-              <FieldLabel htmlFor={`${idPrefix}-name`}>Item</FieldLabel>
-              <Input
-                id={`${idPrefix}-name`}
-                autoComplete="off"
-                placeholder="e.g. Maize flour"
-                aria-invalid={!!errors.name}
-                className={authInputClassName}
-                {...register("name")}
-              />
-              <FieldError>{errors.name?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.unit}>
-              <FieldLabel htmlFor={`${idPrefix}-unit`}>Unit</FieldLabel>
-              <Input
-                id={`${idPrefix}-unit`}
-                autoComplete="off"
-                placeholder="e.g. kg, pcs, packets"
-                aria-invalid={!!errors.unit}
-                className={authInputClassName}
-                {...register("unit")}
-              />
-              <FieldError>{errors.unit?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.quantity}>
-              <FieldLabel htmlFor={`${idPrefix}-quantity`}>Quantity</FieldLabel>
-              <Input
-                id={`${idPrefix}-quantity`}
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="any"
-                placeholder="e.g. 45"
-                aria-invalid={!!errors.quantity}
-                className={authInputClassName}
-                {...register("quantity", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.quantity?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.minimum}>
-              <FieldLabel htmlFor={`${idPrefix}-minimum`}>Minimum</FieldLabel>
-              <Input
-                id={`${idPrefix}-minimum`}
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="any"
-                placeholder="e.g. 20"
-                aria-invalid={!!errors.minimum}
-                className={authInputClassName}
-                {...register("minimum", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.minimum?.message}</FieldError>
-            </Field>
-          </div>
+          <WelfareItemFormFields
+            control={control}
+            register={register}
+            errors={errors}
+            idPrefix="add-welfare-item"
+          />
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus } from "lucide-react"
 import { useForm, type DefaultValues } from "react-hook-form"
 
-import { authInputClassName } from "@/components/auth/styles"
+import { StockItemFormFields } from "@/components/stores/stock-item-form-fields"
 import { storeAddButtonClassName } from "@/components/stores/store-card"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,15 +17,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { useCreateStockItem } from "@/hooks/use-create-stock-item"
+import { getErrorMessage } from "@/lib/api/errors"
 import { createStockItemSchema } from "@/lib/schemas/stores"
 import type { CreateStockItemFormValues } from "@/lib/types/stores"
 
 const defaultValues: DefaultValues<CreateStockItemFormValues> = {
-  material: "",
+  item: "",
   unit: "",
+  supplier: "",
 }
 
 type AddStockItemDialogProps = {
@@ -41,6 +41,7 @@ export function AddStockItemDialog({
   const [open, setOpen] = useState(false)
   const createStockItem = useCreateStockItem()
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -49,7 +50,6 @@ export function AddStockItemDialog({
     resolver: zodResolver(createStockItemSchema),
     defaultValues,
   })
-  const idPrefix = `stock-item-${projectId}`
 
   // Every opening starts with an empty form and no leftover error.
   function handleOpenChange(nextOpen: boolean) {
@@ -83,8 +83,8 @@ export function AddStockItemDialog({
             Add a stock item
           </DialogTitle>
           <DialogDescription className="leading-relaxed">
-            Adds a material to the {storeName}. It shows as low stock when the
-            available quantity drops below the minimum.
+            Adds an item to the {storeName}. It shows as low stock when the
+            quantity drops below the minimum.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,92 +94,19 @@ export function AddStockItemDialog({
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t add the stock item. Try again.
+              {getErrorMessage(
+                createStockItem.error,
+                "We couldn't add the stock item. Try again."
+              )}
             </p>
           )}
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Field data-invalid={!!errors.material}>
-              <FieldLabel htmlFor={`${idPrefix}-material`}>Material</FieldLabel>
-              <Input
-                id={`${idPrefix}-material`}
-                autoComplete="off"
-                placeholder="e.g. Cement"
-                aria-invalid={!!errors.material}
-                className={authInputClassName}
-                {...register("material")}
-              />
-              <FieldError>{errors.material?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.unit}>
-              <FieldLabel htmlFor={`${idPrefix}-unit`}>Unit</FieldLabel>
-              <Input
-                id={`${idPrefix}-unit`}
-                autoComplete="off"
-                placeholder="e.g. bags, lengths, metres"
-                aria-invalid={!!errors.unit}
-                className={authInputClassName}
-                {...register("unit")}
-              />
-              <FieldError>{errors.unit?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.available}>
-              <FieldLabel htmlFor={`${idPrefix}-available`}>
-                Available
-              </FieldLabel>
-              <Input
-                id={`${idPrefix}-available`}
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="any"
-                placeholder="e.g. 56"
-                aria-invalid={!!errors.available}
-                className={authInputClassName}
-                {...register("available", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.available?.message}</FieldError>
-            </Field>
-
-            <Field data-invalid={!!errors.minimum}>
-              <FieldLabel htmlFor={`${idPrefix}-minimum`}>Minimum</FieldLabel>
-              <Input
-                id={`${idPrefix}-minimum`}
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="any"
-                placeholder="e.g. 60"
-                aria-invalid={!!errors.minimum}
-                className={authInputClassName}
-                {...register("minimum", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.minimum?.message}</FieldError>
-            </Field>
-
-            <Field
-              data-invalid={!!errors.forecastNeed}
-              className="sm:col-span-2"
-            >
-              <FieldLabel htmlFor={`${idPrefix}-forecast-need`}>
-                Forecast need
-              </FieldLabel>
-              <Input
-                id={`${idPrefix}-forecast-need`}
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="any"
-                placeholder="e.g. 80"
-                aria-invalid={!!errors.forecastNeed}
-                className={authInputClassName}
-                {...register("forecastNeed", { valueAsNumber: true })}
-              />
-              <FieldError>{errors.forecastNeed?.message}</FieldError>
-            </Field>
-          </div>
+          <StockItemFormFields
+            control={control}
+            register={register}
+            errors={errors}
+            idPrefix={`stock-item-${projectId}`}
+          />
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>

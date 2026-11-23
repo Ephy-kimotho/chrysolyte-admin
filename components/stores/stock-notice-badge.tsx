@@ -1,14 +1,12 @@
 import { Badge } from "@/components/ui/badge"
 
 type StockNoticeBadgeProps = {
-  quantity: number
-  minimum: number
+  /** True once the quantity drops below the minimum. */
+  isLow: boolean
 }
 
-/** "LOW STOCK" once the quantity drops below the minimum, otherwise "OK". */
-export function StockNoticeBadge({ quantity, minimum }: StockNoticeBadgeProps) {
-  const isLow = quantity < minimum
-
+/** "LOW STOCK" for a low item, otherwise "OK". */
+export function StockNoticeBadge({ isLow }: StockNoticeBadgeProps) {
   return (
     <Badge
       variant={isLow ? "destructive" : "success"}
