@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { useRemoveAnnouncement } from "@/hooks/use-remove-announcement"
+import { getErrorMessage } from "@/lib/api/errors"
 import type { Announcement } from "@/lib/types/announcements"
 
 type RemoveAnnouncementDialogProps = {
@@ -38,7 +39,7 @@ export function RemoveAnnouncementDialog({
     // Stay open until the removal finishes, so a failure can be shown here.
     event.preventDefault()
     removeAnnouncement.mutate(
-      { id: announcement.id },
+      { announcement },
       { onSuccess: () => setOpen(false) }
     )
   }
@@ -72,7 +73,10 @@ export function RemoveAnnouncementDialog({
             role="alert"
             className="rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
           >
-            We couldn&apos;t remove the announcement. Try again.
+            {getErrorMessage(
+              removeAnnouncement.error,
+              "We couldn't remove the announcement. Try again."
+            )}
           </p>
         )}
 

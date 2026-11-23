@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const announcementTitleMaxLength = 120
-export const announcementBodyMaxLength = 2000
+export const announcementMessageMaxLength = 2000
 
 export const publishAnnouncementSchema = z.object({
   title: z
@@ -12,12 +12,14 @@ export const publishAnnouncementSchema = z.object({
       announcementTitleMaxLength,
       `Keep the title under ${announcementTitleMaxLength} characters`
     ),
-  body: z
+  message: z
     .string()
     .trim()
     .min(1, "Write the announcement")
     .max(
-      announcementBodyMaxLength,
-      `Keep the announcement under ${announcementBodyMaxLength} characters`
+      announcementMessageMaxLength,
+      `Keep the announcement under ${announcementMessageMaxLength} characters`
     ),
+  /** Unticked keeps the announcement internal. */
+  isPublic: z.boolean(),
 })

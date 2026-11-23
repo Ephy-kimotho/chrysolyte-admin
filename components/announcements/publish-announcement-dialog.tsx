@@ -3,10 +3,11 @@
 import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Megaphone } from "lucide-react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 
 import { authInputClassName } from "@/components/auth/styles"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogClose,
@@ -16,23 +17,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { usePublishAnnouncement } from "@/hooks/use-publish-announcement"
+import { getErrorMessage } from "@/lib/api/errors"
 import {
-  announcementBodyMaxLength,
+  announcementMessageMaxLength,
   announcementTitleMaxLength,
   publishAnnouncementSchema,
 } from "@/lib/schemas/announcements"
 import type { PublishAnnouncementFormValues } from "@/lib/types/announcements"
 
-const defaultValues: PublishAnnouncementFormValues = { title: "", body: "" }
+const defaultValues: PublishAnnouncementFormValues = {
+  title: "",
+  message: "",
+  isPublic: true,
+}
 
 export function PublishAnnouncementDialog() {
   const [open, setOpen] = useState(false)
   const publishAnnouncement = usePublishAnnouncement()
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -85,7 +99,10 @@ export function PublishAnnouncementDialog() {
               role="alert"
               className="mb-5 rounded-xl bg-destructive-muted px-3.5 py-2.5 text-sm text-destructive"
             >
-              We couldn&apos;t publish the announcement. Try again.
+              {getErrorMessage(
+                publishAnnouncement.error,
+                "We couldn't publish the announcement. Try again."
+              )}
             </p>
           )}
 
@@ -104,18 +121,50 @@ export function PublishAnnouncementDialog() {
               <FieldError>{errors.title?.message}</FieldError>
             </Field>
 
-            <Field data-invalid={!!errors.body}>
-              <FieldLabel htmlFor="announcement-body">Announcement</FieldLabel>
+            <Field data-invalid={!!errors.message}>
+              <FieldLabel htmlFor="announcement-message">
+                Announcement
+              </FieldLabel>
               <Textarea
-                id="announcement-body"
+                id="announcement-message"
                 placeholder="What does the team need to know?"
-                maxLength={announcementBodyMaxLength}
-                aria-invalid={!!errors.body}
+                maxLength={announcementMessageMaxLength}
+                aria-invalid={!!errors.message}
                 className="max-h-72 min-h-32 rounded-xl bg-background/60 px-3.5 py-2.5"
-                {...register("body")}
+                {...register("message")}
               />
-              <FieldError>{errors.body?.message}</FieldError>
+              <FieldError>{errors.message?.message}</FieldError>
             </Field>
+
+            <Controller
+              control={control}
+              name="isPublic"
+              render={({ field }) => (
+                <FieldLabel
+                  htmlFor="announcement-public"
+                  className="rounded-xl"
+                >
+                  <Field orientation="horizontal" className="p-3!">
+                    <Checkbox
+                      id="announcement-public"
+                      ref={field.ref}
+                      name={field.name}
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                      onBlur={field.onBlur}
+                    />
+                    <FieldContent>
+                      <FieldTitle>Public announcement</FieldTitle>
+                      <FieldDescription className="text-xs">
+                        Untick to keep it internal.
+                      </FieldDescription>
+                    </FieldContent>
+                  </Field>
+                </FieldLabel>
+              )}
+            />
           </div>
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

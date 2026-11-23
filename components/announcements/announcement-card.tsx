@@ -16,7 +16,8 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             <time dateTime={announcement.publishedAt}>
               {formatDate(announcement.publishedAt)}
             </time>{" "}
-            · {announcement.author}
+            · {announcement.authorName}
+            {!announcement.isPublic && " · Internal"}
           </p>
           <h3 className="font-heading text-base font-bold text-balance break-words text-heading">
             {announcement.title}
@@ -29,7 +30,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
       </div>
 
       <p className="max-w-prose leading-relaxed break-words whitespace-pre-line text-foreground/90">
-        {announcement.body}
+        {announcement.message}
       </p>
     </Card>
   )

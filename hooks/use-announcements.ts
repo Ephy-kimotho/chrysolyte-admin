@@ -1,15 +1,21 @@
 import { useQuery } from "@tanstack/react-query"
 
-import * as announcementsApi from "@/lib/mock/announcements"
+import * as announcementsApi from "@/lib/api/announcements"
 
 export const announcementsQueryKey = ["announcements"] as const
 
+type UseAnnouncementsOptions = {
+  /** False skips the request, e.g. for a user who can't see announcements. */
+  enabled?: boolean
+}
+
 /** Lists company announcements, newest first. */
-export function useAnnouncements() {
+export function useAnnouncements({
+  enabled = true,
+}: UseAnnouncementsOptions = {}) {
   return useQuery({
     queryKey: announcementsQueryKey,
     queryFn: announcementsApi.listAnnouncements,
-    // The mock data is in memory, so render it straight away without a loading state.
-    initialData: announcementsApi.getAnnouncementsSnapshot,
+    enabled,
   })
 }
