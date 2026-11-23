@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query"
 
-import * as designApi from "@/lib/mock/design"
+import * as designApi from "@/lib/api/design"
 
-export const designDeliverablesQueryKey = ["design-deliverables"] as const
+/** Prefix shared by every project's design deliverables query. */
+export const allDesignDeliverablesQueryKey = ["design-deliverables"] as const
 
-/** Design deliverables across all projects. */
-export function useDesignDeliverables() {
+export function designDeliverablesQueryKey(projectId: string) {
+  return [...allDesignDeliverablesQueryKey, projectId] as const
+}
+
+/** A project's design deliverables, soonest deadline first. */
+export function useDesignDeliverables(projectId: string) {
   return useQuery({
-    queryKey: designDeliverablesQueryKey,
-    queryFn: designApi.listDesignDeliverables,
-    // The mock data is in memory, so render it straight away without a loading state.
-    initialData: designApi.getDesignDeliverablesSnapshot,
+    queryKey: designDeliverablesQueryKey(projectId),
+    queryFn: () => designApi.listDesignDeliverables(projectId),
   })
 }

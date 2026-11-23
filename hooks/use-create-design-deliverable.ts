@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { designDeliverablesQueryKey } from "@/hooks/use-design-deliverables"
-import * as designApi from "@/lib/mock/design"
-import type { CreateDesignDeliverableFormValues } from "@/lib/types/design"
+import * as designApi from "@/lib/api/design"
+import { notifyError, notifySuccess } from "@/lib/notify"
+import type { DesignDeliverableFormValues } from "@/lib/types/design"
 
 interface CreateDesignDeliverableOptions {
-  data: CreateDesignDeliverableFormValues
+  data: DesignDeliverableFormValues
 }
 
 /** Adds a design deliverable. Client approval starts as pending. */
@@ -15,7 +16,16 @@ export function useCreateDesignDeliverable() {
   return useMutation({
     mutationFn: ({ data }: CreateDesignDeliverableOptions) =>
       designApi.createDesignDeliverable(data),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: designDeliverablesQueryKey }),
+    onSuccess: (_, { data }) => {
+      notifySuccess(
+        "Deliverable added",
+        `${data.deliverable} is now being tracked.`
+      )
+      return queryClient.invalidateQueries({
+        queryKey: designDeliverablesQueryKey(data.projectId),
+      })
+    },
+    onError: (error, { data }) =>
+      notifyError(`Couldn't add ${data.deliverable}`, error),
   })
 }
