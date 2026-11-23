@@ -7,11 +7,9 @@ import {
   ProjectGridSkeleton,
 } from "@/components/projects/project-grid"
 import { useProjects } from "@/hooks/use-projects"
-import { useAuth } from "@/providers/auth-provider"
 
 export function ProjectsView() {
   const projects = useProjects()
-  const { isClient } = useAuth()
 
   return (
     <section
@@ -25,8 +23,7 @@ export function ProjectsView() {
         >
           Project portfolio
         </h2>
-        {/* Clients can view their projects but not create them. */}
-        {!isClient && <AddProjectDialog />}
+        <AddProjectDialog />
       </div>
 
       {projects.isPending ? (
@@ -40,9 +37,7 @@ export function ProjectsView() {
         />
       ) : projects.data.length === 0 ? (
         <p className="rounded-2xl border border-dashed px-5 py-10 text-center text-sm text-muted-foreground">
-          {isClient
-            ? "You don't have any projects yet."
-            : "No projects yet. Add one to start tracking it here."}
+          No projects yet. Add one to start tracking it here.
         </p>
       ) : (
         <ProjectGrid projects={projects.data} />

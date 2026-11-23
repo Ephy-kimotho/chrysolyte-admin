@@ -22,6 +22,7 @@ import {
 import { onUnauthorized, refreshAccessToken } from "@/lib/axios"
 import {
   CHANGE_PASSWORD_ROUTE,
+  PORTAL_ROUTE,
   canAccessPage,
   dashboardPages,
   getHomeRoute,
@@ -66,11 +67,12 @@ export function isPublicRoute(pathname: string) {
 
 /**
  * Screens that need a session: those under `app/(dashboard)`, which come from
- * `lib/navigation.ts` so a page added there is protected automatically, plus
- * the change-password screen.
+ * `lib/navigation.ts` so a page added there is protected automatically, the
+ * client portal under `app/(clients)`, and the change-password screen.
  */
 const PROTECTED_ROUTES = [
   ...dashboardPages.map((item) => item.href),
+  PORTAL_ROUTE,
   CHANGE_PASSWORD_ROUTE,
 ]
 

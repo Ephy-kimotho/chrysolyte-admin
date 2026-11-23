@@ -48,7 +48,7 @@ export function ProjectStoreTab({ project }: ProjectStoreTabProps) {
           isRetrying={storeItems.isFetching}
         />
       ) : (
-        <Table className="min-w-[48rem]" aria-busy={storeItems.isPending}>
+        <Table className="min-w-3xl" aria-busy={storeItems.isPending}>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className={storeHeadClassName}>Item</TableHead>

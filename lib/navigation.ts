@@ -27,6 +27,14 @@ export const navItems = [
   { title: "Users", href: "/users" },
 ]
 
+/** Where client accounts work. Everything under it is client-only. */
+export const PORTAL_ROUTE = "/portal"
+
+/** Sidebar links for client accounts, under `app/(clients)`. */
+export const portalNavItems = [
+  { title: "Projects", href: `${PORTAL_ROUTE}/projects` },
+]
+
 /** Account pages inside the dashboard shell that aren't sidebar links. */
 export const accountItems = [{ title: "Profile", href: "/profile" }]
 
@@ -34,38 +42,41 @@ export const accountItems = [{ title: "Profile", href: "/profile" }]
  * Detail pages whose header title differs from their section's, e.g.
  * `/projects/[projectId]` shows "Project" rather than "Projects".
  */
-export const detailPageTitles = [{ parentHref: "/projects", title: "Project" }]
+export const detailPageTitles = [
+  { parentHref: "/projects", title: "Project" },
+  { parentHref: `${PORTAL_ROUTE}/projects`, title: "Project" },
+]
 
 /** Every page in the dashboard shell, used for header titles and route guards. */
 export const dashboardPages = [...navItems, ...accountItems]
+
+/** Every signed-in page, staff and client, used for header titles. */
+export const allPages = [...dashboardPages, ...portalNavItems]
 
 export function isNavItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-/** The only sections a client account can open, including their detail pages. */
-const clientSections = ["/projects"]
-
 /** Where a signed-in user lands after login or when a page is off limits. */
 export function getHomeRoute(user: AuthUser) {
   if (mustChangePassword(user)) return CHANGE_PASSWORD_ROUTE
-  return isClientUser(user) ? "/projects" : "/dashboard"
+  return isClientUser(user) ? `${PORTAL_ROUTE}/projects` : "/dashboard"
 }
 
 /** Sidebar links the user is allowed to see. */
 export function getNavItems(user: AuthUser | null) {
-  if (!user || !isClientUser(user)) return navItems
-  return navItems.filter((item) => clientSections.includes(item.href))
+  return user && isClientUser(user) ? portalNavItems : navItems
 }
 
 /**
- * Whether the user may open a signed-in page. A temporary password locks the
+ * Whether the user may open a signed-in page. Client accounts are kept to the
+ * portal and staff to everything else. A temporary password locks the
  * account to the change-password screen, which is closed to everyone else,
  * so changing it sends the user on to their home page.
  */
 export function canAccessPage(user: AuthUser, pathname: string) {
   if (mustChangePassword(user)) return pathname === CHANGE_PASSWORD_ROUTE
   if (pathname === CHANGE_PASSWORD_ROUTE) return false
-  if (!isClientUser(user)) return true
-  return clientSections.some((href) => isNavItemActive(pathname, href))
+  // Clients only see the portal, and staff never do.
+  return isClientUser(user) === isNavItemActive(pathname, PORTAL_ROUTE)
 }
