@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { formatDate } from "@/lib/format"
-import type { ProjectStatus } from "@/lib/types/dashboard"
+import type { Project } from "@/lib/types/projects"
 
 function progressVariant(progress: number) {
   if (progress < 20) return "destructive"
@@ -11,7 +11,10 @@ function progressVariant(progress: number) {
 }
 
 type ProjectStatusCardProps = {
-  projects: ProjectStatus[]
+  projects: Pick<
+    Project,
+    "id" | "name" | "phase" | "location" | "progress" | "dueDate"
+  >[]
 }
 
 export function ProjectStatusCard({ projects }: ProjectStatusCardProps) {
