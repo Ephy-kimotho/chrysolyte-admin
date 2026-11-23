@@ -1,17 +1,16 @@
 "use client"
 
-import { ProjectFinancialsTable } from "@/components/financials/project-financials-table"
+import { RecordTransactionDialog } from "@/components/financials/record-transaction-dialog"
 import { TransactionsTable } from "@/components/financials/transactions-table"
-import { useFinancials } from "@/hooks/use-financials"
 
 export function FinancialsView() {
-  const { data: financials } = useFinancials()
-
   return (
     <div className="flex flex-col gap-4">
-      <ProjectFinancialsTable projects={financials.projects} />
+      <div className="flex justify-end">
+        <RecordTransactionDialog />
+      </div>
       {/* Transactions run oldest to newest, as in the design. */}
-      <TransactionsTable transactions={financials.transactions} />
+      <TransactionsTable />
     </div>
   )
 }

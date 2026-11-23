@@ -1,10 +1,14 @@
 "use client"
 
+import { useMemo } from "react"
+
+import { LoadError } from "@/components/load-error"
 import {
   TableCard,
   tableCellClassName,
   tableHeadClassName,
 } from "@/components/table-card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -13,9 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useProjectAssignments } from "@/hooks/use-project-assignments"
 import { useProjectWages } from "@/hooks/use-project-wages"
 import { useStaff } from "@/hooks/use-staff"
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDate } from "@/lib/format"
+
+const personnelColumnCount = 5
 
 function EmptyRow({
   colSpan,
@@ -37,9 +44,17 @@ function EmptyRow({
 }
 
 export function ProjectSiteStaffTab({ projectId }: { projectId: string }) {
-  const { data: staff = [] } = useStaff()
+  const assignmentsQuery = useProjectAssignments(projectId)
+  const assignments = assignmentsQuery.data ?? []
   const { data: wages } = useProjectWages(projectId)
-  const personnel = staff.filter((member) => member.projectId === projectId)
+
+  // The assignments carry name and role; the rate, activity and KPI come
+  // from the staff list.
+  const { data: staff } = useStaff()
+  const staffById = useMemo(
+    () => new Map(staff?.map((member) => [member.id, member])),
+    [staff]
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,52 +63,92 @@ export function ProjectSiteStaffTab({ projectId }: { projectId: string }) {
         title="Assigned personnel"
         titleClassName="pt-2 text-lg"
       >
-        <Table className="min-w-[40rem]">
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className={tableHeadClassName}>Name</TableHead>
-              <TableHead className={tableHeadClassName}>Role</TableHead>
-              <TableHead className={tableHeadClassName}>Daily rate</TableHead>
-              <TableHead className={tableHeadClassName}>Last active</TableHead>
-              <TableHead className={tableHeadClassName}>KPI</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className="[&_tr:last-child]:border-b">
-            {personnel.length === 0 ? (
-              <EmptyRow colSpan={5}>
-                No staff assigned to this project.
-              </EmptyRow>
-            ) : (
-              personnel.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className={tableCellClassName}>
-                    {member.fullName}
-                  </TableCell>
-                  <TableCell className={tableCellClassName}>
-                    {member.role}
-                  </TableCell>
-                  <TableCell className={`${tableCellClassName} tabular-nums`}>
-                    {formatCurrency(member.dailyRate)}
-                  </TableCell>
-                  <TableCell className={`${tableCellClassName} tabular-nums`}>
-                    {member.lastActiveOn === null ? (
-                      "—"
-                    ) : (
-                      <time dateTime={member.lastActiveOn}>
-                        {member.lastActiveOn}
-                      </time>
-                    )}
-                  </TableCell>
-                  <TableCell className={`${tableCellClassName} tabular-nums`}>
-                    {member.kpiEfficiency === null
-                      ? "—"
-                      : `${member.kpiEfficiency}%`}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        {assignmentsQuery.isError ? (
+          <LoadError
+            error={assignmentsQuery.error}
+            fallback="We couldn't load the assigned personnel."
+            onRetry={() => assignmentsQuery.refetch()}
+            isRetrying={assignmentsQuery.isFetching}
+          />
+        ) : (
+          <Table className="min-w-[40rem]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={tableHeadClassName}>Name</TableHead>
+                <TableHead className={tableHeadClassName}>Role</TableHead>
+                <TableHead className={tableHeadClassName}>Daily rate</TableHead>
+                <TableHead className={tableHeadClassName}>
+                  Last active
+                </TableHead>
+                <TableHead className={tableHeadClassName}>KPI</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="[&_tr:last-child]:border-b">
+              {assignmentsQuery.isPending ? (
+                [0, 1].map((row) => (
+                  <TableRow key={row} className="hover:bg-transparent">
+                    {Array.from({ length: personnelColumnCount }, (_, cell) => (
+                      <TableCell key={cell} className={tableCellClassName}>
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : assignments.length === 0 ? (
+                <EmptyRow colSpan={personnelColumnCount}>
+                  No staff assigned to this project.
+                </EmptyRow>
+              ) : (
+                assignments.map((assignment) => {
+                  const member = staffById.get(assignment.staffId)
+
+                  return (
+                    <TableRow key={assignment.id}>
+                      <TableCell className={tableCellClassName}>
+                        <p>{assignment.staffName}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          <time dateTime={assignment.assignedFrom}>
+                            {formatDate(assignment.assignedFrom)}
+                          </time>{" "}
+                          –{" "}
+                          <time dateTime={assignment.assignedTo}>
+                            {formatDate(assignment.assignedTo)}
+                          </time>
+                        </p>
+                      </TableCell>
+                      <TableCell className={tableCellClassName}>
+                        {assignment.staffRole}
+                      </TableCell>
+                      <TableCell
+                        className={`${tableCellClassName} tabular-nums`}
+                      >
+                        {member ? formatCurrency(member.dailyRate) : "—"}
+                      </TableCell>
+                      <TableCell
+                        className={`${tableCellClassName} tabular-nums`}
+                      >
+                        {member?.lastActiveOn ? (
+                          <time dateTime={member.lastActiveOn}>
+                            {formatDate(member.lastActiveOn)}
+                          </time>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className={`${tableCellClassName} tabular-nums`}
+                      >
+                        {member?.kpiEfficiency == null
+                          ? "—"
+                          : `${member.kpiEfficiency}%`}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        )}
       </TableCard>
 
       <TableCard

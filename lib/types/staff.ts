@@ -316,3 +316,26 @@ export type StaffAssignment = {
   /** Timestamp with offset, e.g. `2026-11-21 10:37:44.460878+00:00`. */
   createdAt: string
 }
+
+/** An assignment as `GET /people/assignments?project_id=…` returns it. */
+export type ProjectAssignmentResponse = StaffAssignmentResponse & {
+  staff_name: string
+  staff_role: string
+  /** e.g. `Construction`. */
+  staff_division: string
+}
+
+/** Someone assigned to a project, for a date range. */
+export type ProjectAssignment = {
+  id: string
+  staffId: string
+  /** The project's reference code, which is also its id. */
+  projectId: string
+  staffName: string
+  staffRole: string
+  staffDivision: string
+  /** ISO date (yyyy-MM-dd). */
+  assignedFrom: string
+  /** ISO date (yyyy-MM-dd). */
+  assignedTo: string
+}

@@ -12,6 +12,8 @@ import {
   type CreateStaffMemberPayload,
   type CreateStaffSkillFormValues,
   type CreateStaffSkillPayload,
+  type ProjectAssignment,
+  type ProjectAssignmentResponse,
   type StaffAssignment,
   type StaffAssignmentResponse,
   type StaffDashboard,
@@ -174,6 +176,33 @@ export async function listStaffAssignments(
     assignedTo: assignment.assigned_to,
     createdAt: assignment.created_at,
   }))
+}
+
+/** Everyone assigned to a project, earliest start first. */
+export async function listProjectAssignments(
+  projectId: string
+): Promise<ProjectAssignment[]> {
+  const response = await axiosInstance.get<ProjectAssignmentResponse[]>(
+    "/people/assignments",
+    { params: { project_id: projectId } }
+  )
+  return response.data
+    .map((assignment) => ({
+      id: assignment.assignment_id,
+      staffId: assignment.staff_id,
+      projectId: assignment.project_id,
+      staffName: assignment.staff_name,
+      staffRole: assignment.staff_role,
+      staffDivision: assignment.staff_division,
+      assignedFrom: assignment.assigned_from,
+      assignedTo: assignment.assigned_to,
+    }))
+    .sort(
+      (a, b) =>
+        // ISO dates sort as text.
+        a.assignedFrom.localeCompare(b.assignedFrom) ||
+        a.staffName.localeCompare(b.staffName)
+    )
 }
 
 export async function deleteStaffSkill(skillId: string) {

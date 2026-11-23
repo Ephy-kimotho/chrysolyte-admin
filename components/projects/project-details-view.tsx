@@ -14,10 +14,11 @@ import { LoadError } from "@/components/load-error"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useFinancials } from "@/hooks/use-financials"
 import { useProject } from "@/hooks/use-project"
-import { useStaff } from "@/hooks/use-staff"
+import { useProjectAssignments } from "@/hooks/use-project-assignments"
 import { useStaffNames } from "@/hooks/use-staff-names"
+import { useTransactions } from "@/hooks/use-transactions"
+import { sumTransactions } from "@/lib/api/financials"
 import { formatCurrency } from "@/lib/format"
 
 const sections = [
@@ -53,9 +54,9 @@ export function ProjectDetailsView({ projectId }: ProjectDetailsViewProps) {
 
 function ProjectDetails({ projectId }: ProjectDetailsViewProps) {
   const projectQuery = useProject(projectId)
-  const { data: staff = [] } = useStaff()
+  const { data: assignments } = useProjectAssignments(projectId)
   const staffNames = useStaffNames()
-  const { data: financials } = useFinancials()
+  const { data: transactions } = useTransactions({ projectId })
   const project = projectQuery.data
 
   if (projectQuery.isPending) return <ProjectDetailsSkeleton />
@@ -79,12 +80,8 @@ function ProjectDetails({ projectId }: ProjectDetailsViewProps) {
     )
   }
 
-  const finances = financials.projects.find(
-    (item) => item.projectId === project.id
-  )
-  const assignedStaff = staff.filter(
-    (member) => member.projectId === project.id
-  ).length
+  // Undefined until the project's transactions load.
+  const finances = transactions && sumTransactions(transactions)
   const meta = [
     project.phase,
     project.contractType,
@@ -120,16 +117,19 @@ function ProjectDetails({ projectId }: ProjectDetailsViewProps) {
           value={`${project.progress}%`}
           label="Milestone-derived progress"
         />
-        <StatCard value={assignedStaff} label="Assigned staff" />
         <StatCard
-          value={formatCurrency(finances?.clientPaid ?? 0)}
+          value={assignments ? assignments.length : "—"}
+          label="Assigned staff"
+        />
+        <StatCard
+          value={finances ? formatCurrency(finances.clientPaid) : "—"}
           label="Client receipts"
         />
         <StatCard
           value={
-            finances?.budgetRemaining == null
-              ? "—"
-              : formatCurrency(finances.budgetRemaining)
+            finances
+              ? formatCurrency(project.budget - finances.recordedCosts)
+              : "—"
           }
           label="Budget remaining"
         />

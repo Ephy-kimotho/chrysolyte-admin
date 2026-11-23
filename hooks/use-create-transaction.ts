@@ -1,8 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { financialsQueryKey } from "@/hooks/use-financials"
-import * as financialsApi from "@/lib/mock/financials"
-import type { CreateTransactionFormValues } from "@/lib/types/financials"
+import { transactionsQueryKey } from "@/hooks/use-transactions"
+import * as financialsApi from "@/lib/api/financials"
+import { formatCurrency } from "@/lib/format"
+import { notifyError, notifySuccess } from "@/lib/notify"
+import {
+  transactionTypeLabels,
+  type CreateTransactionFormValues,
+} from "@/lib/types/financials"
 
 interface CreateTransactionOptions {
   data: CreateTransactionFormValues
@@ -15,7 +20,13 @@ export function useCreateTransaction() {
   return useMutation({
     mutationFn: ({ data }: CreateTransactionOptions) =>
       financialsApi.createTransaction(data),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: financialsQueryKey }),
+    onSuccess: (_, { data }) => {
+      notifySuccess(
+        `${transactionTypeLabels[data.type]} recorded`,
+        `${formatCurrency(data.amount)} for ${data.description}.`
+      )
+      return queryClient.invalidateQueries({ queryKey: transactionsQueryKey })
+    },
+    onError: (error) => notifyError("Couldn't record the transaction", error),
   })
 }

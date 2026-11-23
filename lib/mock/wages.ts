@@ -57,10 +57,3 @@ export function getProjectWagesSnapshot(projectId: string): WageProjection[] {
 export async function listProjectWages(projectId: string) {
   return getProjectWagesSnapshot(projectId)
 }
-
-/** Net wages still due this Friday for a project. */
-export function getWeeklyWagesDue(projectId: string) {
-  return getProjectWagesSnapshot(projectId)
-    .filter((entry) => entry.status === "Due Friday")
-    .reduce((total, entry) => total + entry.net, 0)
-}
